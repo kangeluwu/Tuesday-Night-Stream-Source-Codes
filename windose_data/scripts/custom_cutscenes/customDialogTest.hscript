@@ -1,0 +1,33 @@
+
+
+function start(song) {
+
+    var filename = null;
+	var songName = Paths.formatToSongPath(PlayState.SONG.song);
+		if (FNFAssets.exists(Paths.txt(songName + '/dialoguestuff')))
+			{
+				filename = Paths.txt(songName + '/dialoguestuff');
+			}
+			
+    var goodDialog;
+    if (filename != null) 
+    goodDialog = FNFAssets.getText(filename);
+    if (goodDialog != null){
+        new FlxTimer().start(10, function(tmr)
+            {
+                startGame();
+            });
+   var dialogueBox = new DialogueBoxCustom(false, goodDialog);
+   dialogueBox.finishThing = startGame;
+add(dialogueBox);
+
+
+    }
+    else
+        startGame();
+}
+
+function startGame() {
+    //FlxTween.tween(bg, {alpha: 0}, 1);
+                    currentPlayState.startCountdown();
+}

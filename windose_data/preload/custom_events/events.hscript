@@ -1,0 +1,59 @@
+//name -- the name of the current event
+//value1 -- the first value of the event
+//value2 -- the second value of the event
+//value3 -- Extra Value :D
+var doCrossFades = false;
+function onEvent(name, value1, value2, value3)
+{
+    switch (name)
+    {
+      case 'do CrossFades':
+        if (value1 == 'true')
+        doCrossFades = true;
+        else if (value1 == 'false')
+          doCrossFades = false;
+    }
+}
+
+function opponentNoteHit(id, direction, noteType, isSustainNote, note){
+  if (doCrossFades){
+    var onActing = currentPlayState.dad;
+    var isFlip = false;
+    if (currentPlayState.opponentPlayer){
+      onActing = currentPlayState.boyfriend;
+isFlip = true;
+    }
+  if (noteType == 'Both Sing'){
+
+    currentPlayState.makeCrossfades(isFlip,onActing);
+    currentPlayState.makeCrossfades(isFlip,currentPlayState.gf,currentPlayState.grpGFCrossfades);
+  }else if (noteType == 'GF Sing'){
+    currentPlayState.makeCrossfades(isFlip,currentPlayState.gf,currentPlayState.grpGFCrossfades);
+  }
+  else{
+    currentPlayState.makeCrossfades(isFlip,onActing);
+  }
+}
+  }
+  
+  function goodNoteHit(id, direction, noteType, isSustainNote, note){
+  
+    if (doCrossFades){
+      var actingOn = currentPlayState.boyfriend;
+      var isFlip = true;
+      if (currentPlayState.opponentPlayer){
+        actingOn = currentPlayState.dad;
+  isFlip = false;
+      }
+      if (noteType == 'Both Sing'){
+
+        currentPlayState.makeCrossfades(isFlip,actingOn);
+        currentPlayState.makeCrossfades(isFlip,currentPlayState.gf,currentPlayState.grpGFCrossfades);
+      }else if (noteType == 'GF Sing'){
+        currentPlayState.makeCrossfades(isFlip,currentPlayState.gf,currentPlayState.grpGFCrossfades);
+      }
+      else{
+        currentPlayState.makeCrossfades(isFlip,actingOn);
+      }
+    }
+  }

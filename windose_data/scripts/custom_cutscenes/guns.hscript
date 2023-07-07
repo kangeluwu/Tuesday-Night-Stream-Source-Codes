@@ -1,0 +1,9 @@
+var bgvideo;
+function start(song) {
+bgvideo = new FlxVideo('windose_data/videos/gunsCutscene.mp4');
+bgvideo.finishCallback = startGame;
+}
+
+function startGame() {
+                    currentPlayState.startCountdown();
+}

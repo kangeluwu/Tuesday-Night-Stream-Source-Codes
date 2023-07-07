@@ -1,0 +1,5 @@
+Setting Crossfades Lmao
+Value 1: Crossfade Duration
+Value 2: Crossfade Intensity
+Value 3: Crossfade Blend
+Leave the values blank if you want to use Default.
