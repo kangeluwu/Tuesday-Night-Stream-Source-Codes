@@ -1,0 +1,4 @@
+[0[ [179[ [223[ [216[ |Breakfast| *0* =1= #main#  <0.06< >4> (0.2( )5) {0.83{ }5} `hand_textbox` ~clickText~
+:bf-pixel: !default! [zpix.ttf[ ]40] *0* =0= +0+ -0- <0< >0> ;0.06; |true| #main# ^pixelText^ !#FFFFFF! ?#1D0E3A? .. ~~      测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试
+:bf-pixel: !default! [zpix.ttf[ ]40] *0* =0= +0+ -0- <0< >0> ;0.06; |true| #main# ^pixelText^ !#FFFFFF! ?#1D0E3A? .. ~~      测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试
+:bf: !default! [zpix.ttf[ ]40] *0* =0= +0+ -0- <0< >0> ;0.06; |false| #main# ^pixelText^ !#FFFFFF! ?#1D0E3A? .. ~~      aaaaaaaaaaaaaaaaaaa测试
