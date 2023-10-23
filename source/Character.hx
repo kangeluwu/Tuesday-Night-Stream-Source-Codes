@@ -34,6 +34,14 @@ import openfl.Lib;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
+#if VIDEOS_ALLOWED
+
+#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideo as FlxVideo;
+#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler as FlxVideo;
+#elseif (hxCodec == "2.6.0") import VideoHandler as FlxVideo;
+#else import vlc.VideoHandler as FlxVideo; #end
+
+#end
 typedef CharacterFile = {
 	var crossColor:FlxColor;
 	var animations:Array<AnimArray>;
@@ -83,7 +91,8 @@ class Character extends FlxSprite
 	public var hasGun:Bool = false;
 	public var healthIcon:String = 'face';
 	public var animationsArray:Array<AnimArray> = [];
-
+	public var followCamX:Float = 0;
+	public var followCamY:Float = 0;
 	public var positionArray:Array<Float> = [0, 0];
 	public var cameraPosition:Array<Float> = [0, 0];
 
@@ -130,8 +139,8 @@ class Character extends FlxSprite
 		antialiasing = ClientPrefs.globalAntialiasing;
 		var library:String = null;
 		var hscriptChars:Array<Array<String>> = [];
-		if (FNFAssets.exists(Paths.getLibraryPath("hscriptCharList.txt")))
-			hscriptChars.push(CoolUtil.coolTextFile(Paths.getLibraryPath("hscriptCharList.txt")));
+		if (FNFAssets.exists(SUtil.getPath() + Paths.getLibraryPath("hscriptCharList.txt")))
+			hscriptChars.push(CoolUtil.coolTextFile(SUtil.getPath() + Paths.getLibraryPath("hscriptCharList.txt")));
 		if (FNFAssets.exists(Paths.modFolders("hscriptCharList.txt")))
 			hscriptChars.push(CoolUtil.coolTextFile(Paths.modFolders("hscriptCharList.txt")));
 
@@ -146,10 +155,10 @@ case chars: var interppath:String = '';
 if(FNFAssets.exists(Paths.modFolders('characters/') + curCharacter, Hscript)) {
 	interppath = Paths.modFolders('characters/');
 } else {
-	interppath = Paths.getPreloadPath('characters/');
+	interppath = SUtil.getPath() + Paths.getPreloadPath('characters/');
 }
 #else
-interppath = Paths.getPreloadPath('characters/');
+interppath = SUtil.getPath() + Paths.getPreloadPath('characters/');
 #end
 
 if (FNFAssets.exists(interppath + curCharacter, Hscript)){
@@ -169,7 +178,7 @@ callInterp("init", [this]);
 				#if MODS_ALLOWED
 				var path:String = Paths.modFolders(characterPath);
 				if (!FileSystem.exists(path)) {
-					path = Paths.getPreloadPath(characterPath);
+					path = SUtil.getPath() + Paths.getPreloadPath(characterPath);
 				}
 
 				if (!FileSystem.exists(path))
@@ -178,7 +187,7 @@ callInterp("init", [this]);
 				if (!Assets.exists(path))
 				#end
 				{
-					path = Paths.getPreloadPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
+					path = SUtil.getPath() + Paths.getPreloadPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 				}
 
 				#if MODS_ALLOWED
@@ -199,7 +208,7 @@ callInterp("init", [this]);
 				//var modTextureToFind:String = Paths.modFolders("images/"+json.image);
 				//var textureToFind:String = Paths.getPath('images/' + json.image, new AssetType();
 				
-				if (FileSystem.exists(modTxtToFind) || FileSystem.exists(txtToFind) || Assets.exists(txtToFind))
+				if (FileSystem.exists(modTxtToFind) || FileSystem.exists(SUtil.getPath() + txtToFind) || Assets.exists(txtToFind))
 				#else
 				if (Assets.exists(Paths.getPath('images/' + json.image + '.txt', TEXT)))
 				#end
@@ -215,7 +224,7 @@ callInterp("init", [this]);
 				//var modTextureToFind:String = Paths.modFolders("images/"+json.image);
 				//var textureToFind:String = Paths.getPath('images/' + json.image, new AssetType();
 				
-				if (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind))
+				if (FileSystem.exists(modAnimToFind) || FileSystem.exists(SUtil.getPath() + animToFind) || Assets.exists(animToFind))
 				#else
 				if (Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT)))
 				#end
@@ -276,7 +285,8 @@ callInterp("init", [this]);
 						} else {
 							animation.addByPrefix(animAnim, animName, animFps, animLoop);
 						}
-
+						if(anim.offsets == null) 
+							crossFadeColor = FlxColor.fromRGB(healthColorArray[0],healthColorArray[1],healthColorArray[2]);
 						if(anim.offsets != null && anim.offsets.length > 1) {
 							addOffset(anim.anim, anim.offsets[0], anim.offsets[1]);
 						}
@@ -293,10 +303,10 @@ callInterp("init", [this]);
 		if(FNFAssets.exists(Paths.modFolders('characters/') + curCharacter, Hscript)) {
 			interppath = Paths.modFolders('characters/');
 		} else {
-			interppath = Paths.getPreloadPath('characters/');
+			interppath = SUtil.getPath() + Paths.getPreloadPath('characters/');
 		}
 		#else
-		interppath = Paths.getPreloadPath('characters/');
+		interppath = SUtil.getPath() + Paths.getPreloadPath('characters/');
 		#end
 
 		if (FNFAssets.exists(interppath + curCharacter, Hscript)){
@@ -352,10 +362,13 @@ callInterp("init", [this]);
 		loadMappedAnims();
 		playAnim("shoot1");
 		}
+		followCamX = positionArray[0];
+		followCamY = positionArray[1];
 	}
 
 	override function update(elapsed:Float)
 	{
+		
 		if(!debugMode && animation.curAnim != null)
 		{
 			if(heyTimer > 0)
@@ -556,6 +569,7 @@ callInterp("init", [this]);
 	public static function getAnimInterp(char:String):Interp {
 		var interp = PluginManager.createSimpleInterp();
 		var parser = new hscript.Parser();
+		parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
 		var program:Expr;
 		var path:String = '';
 
@@ -563,7 +577,7 @@ callInterp("init", [this]);
 		if(FNFAssets.exists(Paths.modFolders('characters/') + char, Hscript)) {
 			path = Paths.modFolders('characters/');
 		} else {
-			path = Paths.getPreloadPath('characters/');
+			path = SUtil.getPath() + Paths.getPreloadPath('characters/');
 		}
 		#else
 		path = Paths.getPreloadPath('characters/');
@@ -577,7 +591,7 @@ callInterp("init", [this]);
 		interp.variables.set('FlxGraphic', FlxGraphic);
 		interp.variables.set("hscriptPath", path + char + '/');
 		interp.variables.set("charName", char);
-		interp.variables.set("Paths", Paths);
+		
 		interp.variables.set("FunkinLua", FunkinLua);
 		interp.variables.set("currentPlayState", PlayState.instance);
 		interp.variables.set("PlayState", PlayState);
@@ -586,10 +600,12 @@ callInterp("init", [this]);
 		interp.variables.set("MainMenuState", MainMenuState);
 		interp.variables.set("ChartingState", ChartingState);
 		interp.variables.set("StoryMenuState", StoryMenuState);
+		if (PlayState.SONG != null){
 		interp.variables.set("curSong", PlayState.SONG.song);
 		interp.variables.set("curStep", PlayState.instance.curStep);
 		interp.variables.set("curBeat", PlayState.instance.curBeat);
 		interp.variables.set("curSection", PlayState.instance.curSection);
+		}
 		interp.variables.set("pi", Math.PI);
 	
 	    interp.variables.set("Math", Math);

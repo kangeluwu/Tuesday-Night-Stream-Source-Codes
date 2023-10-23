@@ -29,19 +29,14 @@ class Main extends Sprite
 {
 	public static var curMusicName:String = "";
 	public static var cwd:String;
-	public var gameWidth:Int = 1280; // Width of the game in pixels (might be less / more in actual pixels depending on your zoom).
+	public var gameWidth:Int = 1280;	 // Width of the game in pixels (might be less / more in actual pixels depending on your zoom).
 	public var gameHeight:Int = 720; // Height of the game in pixels (might be less / more in actual pixels depending on your zoom).
-	#if IS_CORRUPTION
-	var initialState:Class<FlxState> = TitleStateCorr; // The FlxState the game starts with.
-	#else
-	public var initialState:Class<FlxState> = TitleState; // The FlxState the game starts with.
-	#end
+
+	var initialState:Class<FlxState> = TitleState; // The FlxState the game starts with.
 	public static var ammo:Array<Int> = [4, 5];
-	public var functions:Map<String, Map<String, Void->Void>> = [];
-	public var vars:Map<String, Map<String, Dynamic>> = [];
-	public var zoom:Float = -1; // If -1, zoom is automatically calculated to fit the window dimensions.
-	public var framerate:Int = 60; // How many frames per second the game should run at.
-	public var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
+	var zoom:Float = -1; // If -1, zoom is automatically calculated to fit the window dimensions.
+	var framerate:Int = 60; // How many frames per second the game should run at.
+	var skipSplash:Bool = false; // Whether to skip the flixel splash screen that appears in release mode.
 	var startFullscreen:Bool = false; // Whether to start the game in fullscreen on desktop targets
 	public static var fpsVar:FPS;
 
@@ -51,11 +46,11 @@ class Main extends Sprite
 	{
 		Lib.current.addChild(new Main());
 	}
-	
+
 	public function new()
 	{
 		super();
-
+		
 		if (stage != null)
 		{
 			init();
@@ -89,27 +84,27 @@ class Main extends Sprite
 			gameWidth = Math.ceil(stageWidth / zoom);
 			gameHeight = Math.ceil(stageHeight / zoom);
 		}
-	
-		ClientPrefs.loadDefaultKeys();
-		skipSplash = ClientPrefs.skipSplash;
-		addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
+		#if mobile
+		SUtil.doTheCheck();
+		
+				
+			
+		#end
 
-		#if !mobile
+		ClientPrefs.loadDefaultKeys();
+		skipSplash = !ClientPrefs.skipSplash;
+		addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, false, startFullscreen));
+
+
 		fpsVar = new FPS(10, 3, 0xFFFFFF);
 		addChild(fpsVar);
+		
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-		
+
 		if(fpsVar != null) {
 			fpsVar.visible = ClientPrefs.showFPS;
 		}
-		#end
-
-		#if html5
-		FlxG.autoPause = false;
-		FlxG.mouse.visible = false;
-		#end
-		
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end

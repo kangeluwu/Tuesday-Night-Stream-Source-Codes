@@ -2,14 +2,15 @@ var camFollow;
 var camFollowPos;
 var stageSuffix = "";
 var updateCamera = false;
-function onCreate() 
+function create() 
 {
+		
 	PlayState.instance.callAllHScript('onGameOverStart', []);
 }
 
 function startDead(x, y, camX, camY, isPlayer)
 {
-	
+	addHaxeLibrary('OptionsState','options');
 	Conductor.songPosition = 0;
 
 		boyfriend = new Character(x, y, characterName, isPlayer);
@@ -33,11 +34,16 @@ function startDead(x, y, camX, camY, isPlayer)
 		camFollowPos.setPosition(FlixG.camera.scroll.x + (FlixG.camera.width / 2), FlixG.camera.scroll.y + (FlixG.camera.height / 2));
 		add(camFollowPos);
 		PlayState.instance.callAllHScript('inGameOver', [x, y, camX, camY, isPlayer]);
+		Main.fpsVar.x = 10;
+		if (mobile){
+			addVirtualPads('none', 'a_b');
+			addPadcam();
+	}
 }
 var isFollowingAlready = false;
 function update(elapsed)
 {
-	PlayState.instance.callAllHScript("update", [elapsed]);
+
 	if(updateCamera) {
 		var lerpVal = CoolUtil.boundTo(elapsed * 0.6, 0, 1);
 		camFollowPos.setPosition(FlxMath.lerp(camFollowPos.x, camFollow.x, lerpVal), FlxMath.lerp(camFollowPos.y, camFollow.y, lerpVal));
@@ -53,7 +59,7 @@ function update(elapsed)
 		FlixG.sound.music.stop();
 		PlayState.deathCounter = 0;
 		PlayState.seenCutscene = false;
-
+		OptionsState.isFromPlayState = false;
 		WeekData.loadTheFirstEnabledMod();
 		if (PlayState.isStoryMode)
 			MusicBeatState.switchState(new StoryMenuState());
@@ -62,7 +68,7 @@ function update(elapsed)
 
 		FlixG.sound.playMusic(Paths.music('freakyMenu'));
 		PlayState.instance.callOnLuas('onGameOverConfirm', [false]);
-		PlayState.instance.callAllHScript("onGameOverExit", []);
+		PlayState.instance.callAllHScript('onGameOverExit', []);
 	}
 
 	if (boyfriend != null && boyfriend.animation.curAnim.name == 'firstDeath')
@@ -106,7 +112,7 @@ function update(elapsed)
 		Conductor.songPosition = FlixG.sound.music.time;
 	}
 	PlayState.instance.callOnLuas('onUpdatePost', [elapsed]);
-	PlayState.instance.callAllHScript("onUpdatePost", [elapsed]);
+
 }
 
 function beatHit()

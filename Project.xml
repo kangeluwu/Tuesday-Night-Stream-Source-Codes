@@ -2,7 +2,7 @@
 <project>
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="Tuesday Night Stream'" file="windose" packageName="com.ea.game.funkin_rain" package="com.ea.game.funkin_rain" main="Main" version="0.2.8" company="Raincandy_U" />
+	<app title="Tuesday Night Stream'" file="windose" packageName="com.wssPlayground.game.funkin_rain" package="com.wssPlayground.game.funkin_rain" main="Main" version="0.2.8" company="Raincandy_U" />
 
 	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
@@ -30,7 +30,7 @@
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" vsync="false"/>
 
 	<!--Mobile-specific-->
-	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" resizable="false"/>
+	<window if="mobile" orientation="landscape" fullscreen="true" width="1280" height="720" resizable="false"/>
 
 	<!--Switch-specific-->
 	<window if="switch" orientation="landscape" fullscreen="true" width="0" height="0" resizable="true" />
@@ -39,13 +39,13 @@
 
 	
 	<classpath name="source" />
-	<!--define name="HIDDEN_ALLOWED" if="desktop" /-->
+	
 	<!-- PSYCH ENGINE CUSTOMIZATION -->
-	<define name="MODS_ALLOWED" if="desktop" />
-	<!--define name="IS_CORRUPTION" /-->	<!--ADD THIS TO KILL KANGEL -->
-	<define name="LUA_ALLOWED" if="desktop" />
+	<define name="MODS_ALLOWED"/>
+	<define name="LUA_ALLOWED" />
+	<!--define name="HAD_DIFFERNET_LANGS"/-->
 	<define name="ACHIEVEMENTS_ALLOWED" />
-	<define name="VIDEOS_ALLOWED" if="web || windows" unless="32bits"/>
+	<define name="VIDEOS_ALLOWED" if="web || windows || mobile"/>
 	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE WATERMARKS/DEV NAMES ON TITLE SCREEN -->
 	<define name="TITLE_SCREEN_EASTER_EGG" if="officialBuild"/> <!-- DELETE THE if="officialBuild" for enabling this on an unofficial build -->
 	<define name="CRASH_HANDLER" if="desktop release" />
@@ -86,13 +86,10 @@
 		<library name="week6"         preload="false" />
 		<library name="week7"         preload="false" />
 	</section>
-	<assets path="windose_data/hidden"        library="hidden"    embed='true' unless="HIDDEN_ALLOWED || debug"/>
-	<assets path="windose_data/hidden"        library="hidden"    embed='false' if="HIDDEN_ALLOWED || debug"/>
-
+	
 	<assets path="windose_data/videos"        library="videos"        if="VIDEOS_ALLOWED"/>
-	<assets path="windose_data/songs"         library="songs"     embed='true'    exclude="*.ogg" if="web" />
-	<assets path="windose_data/songs"         library="songs"     embed='false'    exclude="*.mp3" if="debug"/>
-	<assets path="windose_data/songs"         library="songs"     embed='false'   exclude="*.mp3" unless="web"/>
+	<assets path="windose_data/songs"         library="songs"         exclude="*.ogg" if="web"/>
+	<assets path="windose_data/songs"         library="songs"         exclude="*.mp3" unless="web"/>
 	<assets path="windose_data/shared"        library="shared"        exclude="*.ogg" if="web"/>
 	<assets path="windose_data/shared"        library="shared"        exclude="*.mp3" unless="web"/>
 	<assets path="windose_data/week2"         library="week2"         exclude="*.ogg" if="web"/>
@@ -108,16 +105,18 @@
 	<assets path="windose_data/week7"         library="week7"         exclude="*.ogg" if="web"/>
 	<assets path="windose_data/week7"         library="week7"         exclude="*.mp3" unless="web"/>
 	<assets path="windose_data/scripts"           library="scripts"       exclude="*.mp3" unless="web"/>
-	<assets path="windose_data/scripts"           library="scripts"       exclude="*.mp3" unless="web"/>
-	<section if="MODS_ALLOWED">
-		<assets path='example_mods' rename='mods' embed='false'/>
-	</section>
+
 	<assets path='art/readme.txt' rename='do NOT readme.txt' />
 	<!-- <template path='mods' /> -->
-	
+
+		<section if="MODS_ALLOWED">
+		<assets path='example_mods' rename='mods' embed='false'/>
+	</section>
+		<section if="mobile">
+		<assets path='mobilePortStuffsIGuess' rename='windose_data/images' embed='false'/>
+		</section>
 	<!-- assets path="CHANGELOG.md" rename='changelog.txt' -->
-	<assets path="plugins" if="windows"/>
-<assets path="dlls/" rename='' if="windows"/>
+
 	<!-- NOTE FOR FUTURE SELF SINCE FONTS ARE ALWAYS FUCKY 
 		TO FIX ONE OF THEM, I CONVERTED IT TO OTF. DUNNO IF YOU NEED TO
 		THEN UHHH I USED THE NAME OF THE FONT WITH SETFORMAT() ON THE TEXT!!!
@@ -128,7 +127,7 @@
 	<set name="BUILD_DIR" value="export/debug" if="debug" />
 	<set name="BUILD_DIR" value="export/release" unless="debug" />
 	<set name="BUILD_DIR" value="export/32bit" if="32bits" />
-    <set name="BUILD_DIR" value="export/fuckingCORRshits" if="IS_CORRUPTION" />
+
 	<!-- _______________________________ Libraries ______________________________ -->
 
 	<haxelib name="flixel" />
@@ -136,7 +135,8 @@
 
 	<!--In case you want to use the addons package-->
 	<haxelib name="flixel-addons" />
-	<haxelib name="hscript" />
+	<!--From CodeNameEngine!Go to check their engine XD github.com/FNF-CNE-Devs/CodenameEngine-->
+	<haxelib name="hscript-improved" />
 	<define name="hscriptPos" />
 	<haxelib name="json2object"/>
 	<haxelib name="uniontypes"/>
@@ -151,9 +151,34 @@
 	<haxelib name="seedyrng"/> <!--haxelib install seedyrng-->
 	<haxelib name="random"/> <!--haxelib install random-->
 	<!--<haxelib name="polymod"/> -->
+	<haxelib name="devicelanguage" />
 	<haxelib name="discord_rpc" if="desktop"/>
 	<haxelib name="linc_luajit" if="windows"/>
-		<haxelib name="haxeui-flixel"/>
+	<haxelib name="haxeui-flixel"/>
+	<haxelib name="extension-videoview" if="android"/>
+	<haxelib name="extension-androidtools" if="android"/>
+<section if="android">
+		<!--Permissions-->
+		<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
+		<config:android permission="android.permission.ACCESS_WIFI_STATE" />
+		<config:android permission="android.permission.INTERNET" />
+		<config:android permission="android.permission.WRITE_EXTERNAL_STORAGE" />
+		<config:android permission="android.permission.READ_EXTERNAL_STORAGE" />
+		<config:android permission="android.permission.VIBRATE" />
+
+		<!--Gradle-->
+		<config:android gradle-version="7.6" gradle-plugin="7.3.1" />
+
+		<!--Audio Recording Fix-->
+		<config:android target-sdk-version="29" if="${lime <= 8.0.0}" />
+	</section>
+
+	<section if="ios">
+		<!--Dependency--> 
+		<dependency name="Metal.framework" />
+		<dependency name="WebKit.framework" />
+	</section>
+
 	<!-- <haxelib name="hxcpp-debug-server" if="desktop"/> -->
 
 	<!-- <haxelib name="markdown" /> -->
@@ -208,9 +233,10 @@
 
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
 		
-	<!--中国人民和日本人民是一致的，只有一个敌人，就是日本帝国主义和中国的民族败类  
-	                                                                 毛泽东
-																1941年5月15日-->
+	<!--中国人民和日本人民是一致的，只有一个敌人，
+        就是日本帝国主义和中国的民族败类  
+	                                                  毛泽东
+						                        1941年5月15日-->
 
 	<!--台湾从来都是中国领土不可分割的一部分，这是无可辩驳的历史和法理事实-->
 	

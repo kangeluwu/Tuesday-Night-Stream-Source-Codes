@@ -7,18 +7,20 @@ import flixel.graphics.FlxGraphic;
 import Controls;
 
 class ClientPrefs {
-	public static var skipSplash:Bool = false;
+	public static var vibration:Bool = false;
+	public static var cacheOnGPU:Bool = true; //From Stilic
 	public static var downScroll:Bool = false;
 	public static var middleScroll:Bool = false;
+	public static var skipSplash:Bool = false;
 	public static var opponentStrums:Bool = true;
 	public static var showFPS:Bool = true;
 	public static var showComboBreaks:Bool = true;
 	public static var flashing:Bool = true;
 	public static var skipChartTypeMenu:Bool = false;
 	public static var globalAntialiasing:Bool = true;
-	public static var showCombos:Bool = true;
+	public static var showCombos:Bool = false;
 	public static var showCombosNum:Bool = true;
-	public static var showCombosRatings:Bool = false;
+	public static var showCombosRatings:Bool = true;
 	public static var hideMs:Bool = false;
 	public static var noteSplashes:Bool = true;
 	public static var lowQuality:Bool = false;
@@ -42,7 +44,7 @@ class ClientPrefs {
 	public static var controllerMode:Bool = false;
 	public static var hitsoundVolume:Float = 0;
 	public static var pauseMusic:String = 'Breakfast';
-	public static var menuMusic:String = 'Approval-Desire';
+	public static var menuMusic:String = 'freakyMenu';
 	public static var checkForUpdates:Bool = true;
 	public static var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
@@ -105,6 +107,8 @@ class ClientPrefs {
 	}
 
 	public static function saveSettings() {
+		FlxG.save.data.vibration = vibration;
+		FlxG.save.data.cacheOnGPU = cacheOnGPU;
 		FlxG.save.data.showComboBreaks = showComboBreaks;
 		FlxG.save.data.downScroll = downScroll;
 		FlxG.save.data.skipChartTypeMenu = skipChartTypeMenu;
@@ -115,12 +119,12 @@ class ClientPrefs {
 		FlxG.save.data.flashing = flashing;
 		FlxG.save.data.globalAntialiasing = globalAntialiasing;
 		FlxG.save.data.noteSplashes = noteSplashes;
+		FlxG.save.data.skipSplash = skipSplash;
 		FlxG.save.data.lowQuality = lowQuality;
 		FlxG.save.data.classicStyle = classicStyle;
 		FlxG.save.data.framerate = framerate;
 		//FlxG.save.data.cursing = cursing;
 		//FlxG.save.data.violence = violence;
-		FlxG.save.data.skipSplash = skipSplash;
 		FlxG.save.data.alwaysDoCutscenes = alwaysDoCutscenes;
 		FlxG.save.data.camZooms = camZooms;
 		FlxG.save.data.noteOffset = noteOffset;
@@ -177,8 +181,14 @@ class ClientPrefs {
 		if(FlxG.save.data.middleScroll != null) {
 			middleScroll = FlxG.save.data.middleScroll;
 		}
+		if(FlxG.save.data.cacheOnGPU != null) {
+			cacheOnGPU = FlxG.save.data.cacheOnGPU;
+		}
 		if(FlxG.save.data.msDisabled != null) {
 			msDisabled = FlxG.save.data.msDisabled;
+		}
+		if(FlxG.save.data.vibration != null) {
+			vibration = FlxG.save.data.vibration;
 		}
 		if(FlxG.save.data.showComboBreaks != null) {
 			showComboBreaks = FlxG.save.data.showComboBreaks;
@@ -191,9 +201,6 @@ class ClientPrefs {
 			if(Main.fpsVar != null) {
 				Main.fpsVar.visible = showFPS;
 			}
-		}
-		if(FlxG.save.data.skipSplash != null) {
-			skipSplash = FlxG.save.data.skipSplash;
 		}
 		if(FlxG.save.data.flashing != null) {
 			flashing = FlxG.save.data.flashing;
@@ -212,6 +219,9 @@ class ClientPrefs {
 		}
 		if(FlxG.save.data.noteSplashes != null) {
 			noteSplashes = FlxG.save.data.noteSplashes;
+		}
+		if(FlxG.save.data.skipSplash != null) {
+			skipSplash = FlxG.save.data.skipSplash;
 		}
 		if(FlxG.save.data.lowQuality != null) {
 			lowQuality = FlxG.save.data.lowQuality;

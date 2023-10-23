@@ -137,12 +137,12 @@ class LoadingState extends MusicBeatState
 	
 	static function getSongPath()
 	{
-		return Paths.inst(PlayState.SONG.song,PlayState.instance.instStuff);
+		return Paths.inst(PlayState.SONG.song);
 	}
 	
 	static function getVocalPath()
 	{
-		return Paths.voices(PlayState.SONG.song,PlayState.instance.voicesStuff);
+		return Paths.voices(PlayState.SONG.song);
 	}
 	
 	inline static public function loadAndSwitchState(target:FlxState, stopMusic = false)
@@ -151,9 +151,9 @@ class LoadingState extends MusicBeatState
 	}
 	public static function loadAndSwitchCustomState(scriptName:String, scriptPath:String = 'windose_data/scripts/custom_menus/', stopMusic:Bool = false)
 		{
-			if (FNFAssets.exists(scriptPath + scriptName + '.hscript'))
+			if (FNFAssets.exists(SUtil.getPath()+scriptPath + scriptName + '.hscript'))
 			{
-				CustomState.customStateScriptPath = scriptPath;
+				CustomState.customStateScriptPath = SUtil.getPath() + scriptPath;
 				CustomState.customStateScriptName = scriptName;
 				MusicBeatState.switchState(getNextState(new CustomState(), stopMusic));
 			}

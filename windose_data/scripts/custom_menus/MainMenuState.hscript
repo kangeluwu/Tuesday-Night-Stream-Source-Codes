@@ -3,35 +3,36 @@
 var curSelected = 0;
 var menuItems;
 
-var optionShit = ['story_mode', 'freeplay', 'mods', 'awards', 'credits','donate', 'options'];
+var optionShit = ['story_mode', 'freeplay', 'credits','options', 'extra_secret'];
 
 var camGame;
+var camHUD;
 var camAchievement;
 var debugKeys;
-
-
+var bgs = [];
+var swagShaders = [];
 var magenta;
 var camFollow;
 var camFollowPos;
- var camGame;
+
+ var portalStuff;
+ var kangel;
  var camAchievement;
 function create()
 {
+    FlixG.autoPause = true;
     FlixG.mouse.visible = true;
+    addHaxeLibrary('FlxAxes','flixel.util');
     addHaxeLibrary('LoadingState');
     addHaxeLibrary('OptionsState','options');
     addHaxeLibrary('MasterEditorMenu','editors');
+    addHaxeLibrary('FlxBackdrop','flixel.addons.display');
+	addHaxeLibrary('FlxGradient','flixel.util');
     if (!FlixG.sound.music.playing)
         {
             FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic),0);
         }
 
-    if (!modsAllow) 
-        optionShit.remove('mods');
-    if (!achiAllow) 
-        optionShit.remove('awards');
-    if (switchTarget)
-        optionShit.remove('donate');
 
 
     
@@ -39,9 +40,12 @@ function create()
     camGame = new FlxCamera();
     camAchievement = new FlxCamera();
     camerabgAlphaShits(camAchievement);
-
+    camHUD = new FlxCamera();
+    camerabgAlphaShits(camHUD);
     FlixG.cameras.reset(camGame);
     FlixG.cameras.add(camAchievement);
+    FlixG.cameras.add(camHUD);
+    
     FlxCamera.defaultCameras = [camGame];
 
     togglePersistUpdate(true);
@@ -55,7 +59,12 @@ function create()
     bg.screenCenter();
     bg.antialiasing = ClientPrefs.globalAntialiasing;
     add(bg);
+    bgs.push(bg);
+    bg.y += 400;
 
+            FlxTween.tween(bg, {y: bg.y - 400}, 1.5, {ease: FlxEase.cubeOut});
+            
+            
     debugKeys = ClientPrefs.copyKey(ClientPrefs.keyBinds.get('debug_1'));
 
 
@@ -76,41 +85,70 @@ function create()
     magenta.antialiasing = ClientPrefs.globalAntialiasing;
     magenta.color = 0xFFfd719b;
     add(magenta);
+    magenta.y += 400;
+    FlxTween.tween(magenta, {y: magenta.y - 400}, 1.5, {ease: FlxEase.cubeOut});
     // magenta.scrollFactor.set();
-
+    var bgalt = new FlxSprite(400).loadGraphic(FNFAssets.getBitmapData('windose_data/images/mainmenu/menu_bg.png'));
+    bgalt.setGraphicSize(Std.int(bgalt.width * 1.175));
+    bgalt.updateHitbox();
+    bgalt.screenCenter(Y);
+    bgalt.antialiasing = false;
+    add(bgalt);
+    bgs.push(bgalt);
     menuItems = new FlxGroup();
     add(menuItems);
 
+    kangel = new FlxSprite(-1000).loadGraphic(FNFAssets.getBitmapData('windose_data/images/mainmenu/menu_kangel.png'));
+    kangel.setGraphicSize(Std.int(kangel.width * 1.05));
+    kangel.updateHitbox();
+    kangel.screenCenter(Y);
+    kangel.antialiasing = false;
+    add(kangel);
+    bgs.push(kangel);
 
+    menuItems = new FlxGroup();
+    add(menuItems);
+    bgalt.x += bgalt.width*2;
+    new FlxTimer().start(0.25, function(tmr)
+    {
+        FlxTween.tween(bgalt, {x: bgalt.x - bgalt.width*2}, 1.5, {ease: FlxEase.cubeOut});
+        FlxTween.tween(kangel, {x: -200}, 1.5, {ease: FlxEase.cubeOut});
+        
+    });
     var scale = 1;
     for (i in 0...optionShit.length)
     {
-        var offset = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-        var menuItem = new FlxSprite(0, (i * 140)  + offset);
-        menuItem.x = (FlxG.width / 2 ) - 220;
-        if (i == 0)
-        menuItem.x -= 70;
-        if (i == 2)
-            menuItem.x += 50;
-
-        menuItem.scale.x = scale;
-        menuItem.scale.y = scale;
-        menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[i]);
-        menuItem.animation.addByPrefix('idle', optionShit[i] + " basic", 24);
-        menuItem.animation.addByPrefix('selected', optionShit[i] + " white", 24);
-        menuItem.animation.play('idle');
+        var menuItem = new FlxSprite(790, 0 + (i * 140)).loadGraphic(FNFAssets.getBitmapData('windose_data/images/mainmenu/menu_'+ optionShit[i] + '.png'));
         menuItem.ID = i;
+        var swagShader = new ColorSwap();
         menuItems.add(menuItem);
-        var scr = (optionShit.length - 4) * 0.135;
-        if(optionShit.length < 6) scr = 0;
-        menuItem.scrollFactor.set(0, scr);
-        menuItem.antialiasing = ClientPrefs.globalAntialiasing;
-        //menuItem.setGraphicSize(Std.int(menuItem.width * 0.58));
-        menuItem.updateHitbox();
-
+        menuItem.shader = swagShader.shader;
+        swagShaders.push(swagShader);
+        switch (i){
+            case 0:
+                menuItem.x -= 100;
+                case 1:
+                    menuItem.x += 50;     
+                    menuItem.y -= 20; 
+                case 2:   
+                     menuItem.y += 30; 
+                     case 3:   
+                        menuItem.x += 50;    
+                        menuItem.y += 28;
+                        case 4:   
+                            menuItem.x -= 100;
+        }
+        menuItem.x += menuItem.width*2;
+        var yo = menuItem.y;
+        menuItem.y += FlixG.random.float(menuItem.height*2,-menuItem.height*2);
+        new FlxTimer().start(0.25, function(tmr)
+        {
+            FlxTween.tween(menuItem, {x: menuItem.x - menuItem.width*2,y: yo}, 1.5, {ease: FlxEase.cubeOut});
+          
+        });
     }
+   
 
-    FlxG.camera.follow(camFollowPos, null, 1);
 
     var funniVerison = CoolUtil.coolTextFile(Paths.txt('verisons'));
 		var engineName;
@@ -121,11 +159,11 @@ function create()
 		gameVersion = funniVerison[2];
 		var versionShit = new FlxText(12, FlixG.height - 44, 0, engineName + MainMenuState.RCEVersion, 12);
 		versionShit.scrollFactor.set();
-		versionShit.setFormat("VCR OSD Mono", 16, OGcolor, "left", FlxTextBorderStyle.OUTLINE, BlackColor);
+		versionShit.setFormat(Paths.font("DinkieBitmap-9px.ttf"), 16, OGcolor, "left", FlxTextBorderStyle.OUTLINE, BlackColor,true);
 		add(versionShit);
 		var versionShit = new FlxText(12, FlixG.height - 24, 0, "v" + gameVersion, 12);
 		versionShit.scrollFactor.set();
-		versionShit.setFormat("VCR OSD Mono", 16, OGcolor, "left", FlxTextBorderStyle.OUTLINE, BlackColor);
+		versionShit.setFormat(Paths.font("DinkieBitmap-9px.ttf"), 16, OGcolor, "left", FlxTextBorderStyle.OUTLINE, BlackColor,true);
 		add(versionShit);
     changeItem(0);
     if (achiAllow){
@@ -151,6 +189,12 @@ function create()
             remove(test);
         }
     });
+    if (mobile){
+        if (debugTarget)
+        addVirtualPads('up_down','a_b_7');
+        else
+        addVirtualPads('up_down','a_b');    
+    }
 }
 function giveAchievement() {
     if (achiAllow){
@@ -170,7 +214,18 @@ function update(elapsed)
 
     var lerpVal = CoolUtil.boundTo(elapsed * 7.5, 0, 1);
     camFollowPos.setPosition(FlxMath.lerp(camFollowPos.x, camFollow.x, lerpVal), FlxMath.lerp( camFollowPos.y, camFollow.y, lerpVal)); 
-
+    menuItems.forEach(function(spr)
+        {
+            if (curSelected == spr.ID)
+            {
+    swagShaders[spr.ID].saturation = 0.134;
+    swagShaders[spr.ID].brightness = 0.7;
+    
+    }else{
+      swagShaders[spr.ID].saturation = 0;
+        swagShaders[spr.ID].brightness = 0;
+    }
+});
     if (!selectedSomethin)
     {
         if (controls.UI_UP_P)
@@ -192,6 +247,7 @@ function update(elapsed)
 
             MusicBeatState.switchState(new TitleState());
         }
+    
             if(FlixG.mouse.wheel != 0)
                 {
                     FlixG.sound.play(Paths.sound('scrollMenu'));
@@ -209,11 +265,12 @@ function update(elapsed)
         {
             enter();
         }
-        else if (desktop && FlxG.keys.anyJustPressed(debugKeys))
+        else if ((debugTarget && desktop && FlxG.keys.anyJustPressed(debugKeys))|| (debugTarget && mobile && visPressed('7')))
         {
             selectedSomethin = true;
-            MusicBeatState.switchState(new MasterEditorMenu());
+            doConfrim();
         }
+       
     }
 
 
@@ -229,17 +286,20 @@ function enter()
         FlixG.sound.play(Paths.sound('confirmMenu'));
 
         if(ClientPrefs.flashing) FlxFlicker.flicker(magenta, 1.1, 0.15, false);
+       
 
         menuItems.forEach(function(spr)
         {
             if (curSelected != spr.ID)
             {
+
                 FlxTween.tween(spr, {alpha: 0}, 0.4, {
                     ease: FlxEase.quadOut,
                     onComplete: function(twn)
                     {
                         spr.kill();
                     }
+
                 });
             }
             else
@@ -260,8 +320,8 @@ function enter()
                                 if (modsAllow)
                                 MusicBeatState.switchState(new ModsMenuState());
 
-                            case 'awards':
-                                MusicBeatState.switchState(new AchievementsMenuState());
+                            case 'extra_secret':
+                                LoadingState.loadAndSwitchCustomState('ExtraState');
                             case 'credits':
                                 MusicBeatState.switchState(new CreditsState());
                             case 'options':
@@ -284,17 +344,14 @@ function changeItem(huh)
 
     menuItems.forEach(function(spr)
     {
-        spr.animation.play('idle');
-        spr.updateHitbox();
+    
         if (spr.ID == curSelected)
         {
-            spr.animation.play('selected');
+
             var add = 0;
             if(menuItems.length > 4) {
                 add = menuItems.length * 8;
             }
-            camFollow.setPosition(spr.getGraphicMidpoint().x, spr.getGraphicMidpoint().y - add);
-            spr.centerOffsets();
         }
 
 

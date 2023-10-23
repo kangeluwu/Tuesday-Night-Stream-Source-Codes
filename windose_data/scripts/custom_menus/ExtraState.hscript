@@ -1,0 +1,213 @@
+
+
+var curSelected = 0;
+var menuItems;
+var optionShit = ['story_mode', 'freeplay', 'credits','options', 'extra_secret'];
+
+var camGame;
+var camAchievement;
+var debugKeys;
+var bgs = [];
+var swagShaders = [];
+var magenta;
+var camFollow;
+var camFollowPos;
+var lock;
+ var camGame;
+ var unlocksound;
+ var kangel;
+function create()
+{
+    if (flixelSave.data.unlockedExtra == null)
+    flixelSave.data.unlockedExtra = false;
+    if (flixelSave.data.finishedIntro == null)
+    flixelSave.data.finishedIntro = false;
+    FlixG.mouse.visible = true;
+    addHaxeLibrary('FlxAxes','flixel.util');
+    addHaxeLibrary('Achievements');
+    addHaxeLibrary('OptionsState','options');
+    addHaxeLibrary('MasterEditorMenu','editors');
+    addHaxeLibrary('FlxBackdrop','flixel.addons.display');
+	addHaxeLibrary('FlxGradient','flixel.util');
+    if (!FlixG.sound.music.playing)
+        {
+            FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic),0);
+        }
+
+
+
+    
+
+    camGame = new FlxCamera();
+    camAchievement = new FlxCamera();
+    camerabgAlphaShits(camAchievement);
+
+    FlixG.cameras.reset(camGame);
+    FlixG.cameras.add(camAchievement);
+    FlxCamera.defaultCameras = [camGame];
+
+    togglePersistUpdate(true);
+    togglePersistentDraw(true);
+    var yScroll = Math.max(0.25 - (0.05 * (optionShit.length - 4)), 0.1);
+    var bg = new FlxSprite(-80).loadGraphic(FNFAssets.getBitmapData('windose_data/images/menuBG.png'));
+    bg.scrollFactor.x = 0;
+    bg.scrollFactor.y = yScroll;
+    bg.setGraphicSize(Std.int(bg.width * 1.175));
+    bg.updateHitbox();
+    bg.screenCenter();
+    bg.antialiasing = ClientPrefs.globalAntialiasing;
+    add(bg);
+    bgs.push(bg);
+
+    debugKeys = ClientPrefs.copyKey(ClientPrefs.keyBinds.get('debug_1'));
+
+
+    
+
+    camFollow = new FlxObject(0, 0, 1, 1);
+    camFollowPos = new FlxObject(0, 0, 1, 1);
+    add(camFollow);
+    add(camFollowPos);
+
+    magenta = new FlxSprite(-80).loadGraphic(FNFAssets.getBitmapData('windose_data/images/menuDesat.png'));
+    magenta.scrollFactor.x = 0;
+    magenta.scrollFactor.y = yScroll;
+    magenta.setGraphicSize(Std.int(magenta.width * 1.175));
+    magenta.updateHitbox();
+    magenta.screenCenter();
+    magenta.visible = false;
+    magenta.antialiasing = ClientPrefs.globalAntialiasing;
+    magenta.color = 0xFFfd719b;
+    add(magenta);
+    // magenta.scrollFactor.set();
+    credGroup = new FlxGroup();
+    add(credGroup);
+    var credTextShit = new Alphabet(0, 0, "Extra Songs", true);
+    credTextShit.x += 100;
+    credTextShit.y += 200;
+    credGroup.add(credTextShit);
+    if (!flixelSave.data.finishedIntro)
+        {
+            lock = new FlxSprite(credTextShit.width + 10 + credTextShit.x,credTextShit.y - 20);
+            lock.frames = Paths.getSparrowAtlas('campaign_menu_UI_assets');
+            lock.animation.addByPrefix('lock', 'lock');
+            lock.animation.play('lock');
+            lock.antialiasing = ClientPrefs.globalAntialiasing;
+            add(lock);
+        }
+    var credTextShit = new Alphabet(0, 0, "Upcoming....", true);
+    credTextShit.x += 100;
+    credTextShit.y += 400;
+    credGroup.add(credTextShit);
+  
+    var test = new FlxSprite().makeGraphic(Std.int(FlxG.width * 8), Std.int(FlxG.height * 8), BlackColor);
+    test.scrollFactor.set();
+
+    add(test);
+    FlxTween.tween(test, {alpha: 0}, 0.85,{
+        ease: FlxEase.linear,
+        onComplete: function(twn)
+        {
+            remove(test);
+        }
+    });
+    if (!flixelSave.data.finishedIntro && flixelSave.data.unlockedExtra){
+        unlocksound= new FlxSound().loadEmbedded(FNFAssets.getSound('windose_data/sounds/unlocked.ogg'));
+        unlocksound.onComplete = function() {
+            flixelSave.data.finishedIntro = true;
+        }
+        FlixG.sound.list.add(unlocksound);
+        FlixG.sound.music.fadeOut(1);
+        new FlxTimer().start(0.25, function(tmr)
+            {
+                unlocksound.play(true);
+              
+            });
+    }
+    if (mobile){
+		addVirtualPads('up_down', 'a_b');
+}
+}
+function giveAchievement() {
+    if (achiAllow){
+    add(new AchievementObject('friday_night_play', camAchievement));
+    FlixG.sound.play(Paths.sound('confirmMenu'), 0.7);
+    trace('Giving achievement "friday_night_play"');
+    }
+}
+var selectedSomethin = false;
+
+function update(elapsed)
+{
+    if (unlocksound != null)
+		{
+            if (unlocksound.time == 1200){
+            FlxTween.tween(lock, {alpha: 0}, 2, {ease: FlxEase.quartInOut,
+                onComplete: function(twn)
+                    {
+                        lock.destroy();
+                    }});
+                }
+                if (unlocksound.time == 6000){
+                    FlixG.sound.music.fadeIn(1);
+                        }
+        }
+    if (FlixG.mouse.justPressed)
+        {
+            if (FlixG.mouse.overlaps(credGroup.members[0]))
+            {
+                if (flixelSave.data.unlockedExtra){
+                    if (flixelSave.data.finishedIntro)
+                LoadingState.loadAndSwitchCustomState('ExtraFreeplayState');
+                }
+                else
+                {
+                    FlixG.sound.play(Paths.sound('cancelMenu'));
+                    
+                    var locked = new FlxText(0,FlixG.height / 2 + 200,0,"", 32);
+                    locked.screenCenter(X);
+                    if(ClientPrefs.langType == 'English')
+                        locked.text += 'Its locked OwO';
+                        else if(ClientPrefs.langType == 'Chinese')
+                        locked.text += '锁住了OwO';
+                        var font = 'vcr.ttf';
+    if(ClientPrefs.langType == 'Chinese')
+        font = 'DinkieBitmap-9px.ttf';
+    locked.setFormat(Paths.font(font), 32);
+    add(locked);
+    locked.alpha = 0.0001;
+    locked.y -= 10 * elapsed;
+    FlxG.camera.shake(0.01,0.2);
+    var tweenStuff = FlxTween.tween(locked, {alpha: 1}, 0.5, {ease: FlxEase.quartInOut,
+        onComplete: function(twn)
+            {
+                new FlxTimer().start(0.05, function(tmr)
+                    {
+                tweenStuff = FlxTween.tween(locked, {alpha: 0}, 0.5, {ease: FlxEase.quartInOut,
+                    onComplete: function(twn)
+                        {
+                            remove(locked);
+                            tweenStuff = null;
+                        }});
+                    });
+            }});
+                }
+            }
+        }
+    if (controls.BACK)
+        {
+            FlixG.sound.play(Paths.sound('cancelMenu'));
+
+            MusicBeatState.switchState(new MainMenuState());
+        }
+        if (unlocksound == null){
+    if (FlixG.sound.music.volume < 0.8)
+    {
+        FlixG.sound.music.volume += 0.5 * FlixG.elapsed;
+        if(FreeplayState.vocals != null) FreeplayState.vocals.volume += 0.5 * elapsed;
+    }
+        }
+    var lerpVal = CoolUtil.boundTo(elapsed * 7.5, 0, 1);
+    camFollowPos.setPosition(FlxMath.lerp(camFollowPos.x, camFollow.x, lerpVal), FlxMath.lerp( camFollowPos.y, camFollow.y, lerpVal)); 
+   
+}

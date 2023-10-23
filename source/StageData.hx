@@ -14,8 +14,8 @@ using StringTools;
 
 typedef StageFile = {
 	var directory:String;
-	var defaultZoom:Float;
-	var isPixelStage:Bool;
+	var defaultZoom:Null<Float>;
+	var isPixelStage:Null<Bool>;
 
 	var boyfriend:Array<Dynamic>;
 	var girlfriend:Array<Dynamic>;
@@ -70,7 +70,7 @@ class StageData {
 
 	public static function getStageFile(stage:String):StageFile {
 		var rawJson:String = null;
-		var path:String = Paths.getPreloadPath('stages/' + stage + '.json');
+		var path:String = SUtil.getPath() +Paths.getPreloadPath('stages/' + stage + '.json');
 
 		#if MODS_ALLOWED
 		var modPath:String = Paths.modFolders('stages/' + stage + '.json');

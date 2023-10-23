@@ -43,11 +43,7 @@ class TitleStateBackup extends MusicBeatState
 {
 	
 	public static var initialized:Bool = false;
-	#if HIDDEN_ALLOWED
-	var doHidden = true;
-	#else
-	var doHidden = false;
-	#end
+
 	#if debug
 	var debugTarget = true;
 #else
@@ -224,11 +220,9 @@ var titleEaster = false;
 
 		if (FlxG.save.data.weekCompleted != null)
 		{
-			#if IS_CORRUPTION
-			StoryMenuStateCorr.weekCompleted = FlxG.save.data.weekCompleted;
-			#else
+		
 			StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
-			#end
+
 		}
 
 		FlxG.mouse.visible = false;

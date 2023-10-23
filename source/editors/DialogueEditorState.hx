@@ -1,5 +1,5 @@
 package editors;
-#if (sys)
+
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -99,6 +99,9 @@ class DialogueEditorState extends MusicBeatState
 		animText.scrollFactor.set();
 		add(animText);
 		changeText();
+		#if mobile
+		addVirtualPad(NONE, A_B_C_X_Y_Z);
+        #end
 		super.create();
 	}
 
@@ -520,12 +523,15 @@ class DialogueEditorState extends MusicBeatState
 	function saveDialogue() {
 		var data:String = Json.stringify(dialogueFile, "\t");
 		if (data.length > 0)
-		{
+		{#if mobile
+			SUtil.saveContent("dialogue", data, ".json");
+			#else
 			_file = new FileReference();
 			_file.addEventListener(Event.COMPLETE, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, "dialogue.json");
+			#end
 		}
 	}
 
@@ -561,13 +567,3 @@ class DialogueEditorState extends MusicBeatState
 		FlxG.log.error("Problem saving file");
 	}
 }
-#else
-class DialogueEditorState extends MusicBeatState
-{
-	override function create()
-		{
-			openfl.Lib.application.window.alert("YOU SHOULDN'T COME HERE.", "");
-			Sys.exit(1);
-		}
-}
-#end

@@ -1,5 +1,5 @@
 package editors;
-#if (sys)
+
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -80,7 +80,9 @@ class MenuCharacterEditorState extends MusicBeatState
 		addEditorBox();
 		FlxG.mouse.visible = true;
 		updateCharTypeBox();
-
+		#if mobile
+		addVirtualPad(FULL, NONE);
+		#end
 		super.create();
 	}
 
@@ -410,12 +412,15 @@ class MenuCharacterEditorState extends MusicBeatState
 		{
 			var splittedImage:Array<String> = imageInputText.text.trim().split('_');
 			var characterName:String = splittedImage[splittedImage.length-1].toLowerCase().replace(' ', '');
-
+			#if mobile
+			SUtil.saveContent(characterName, data, ".json");
+			#else
 			_file = new FileReference();
 			_file.addEventListener(Event.COMPLETE, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, characterName + ".json");
+			#end
 		}
 	}
 
@@ -451,17 +456,3 @@ class MenuCharacterEditorState extends MusicBeatState
 		FlxG.log.error("Problem saving file");
 	}
 }
-#else
-class MenuCharacterEditorState extends MusicBeatState
-{
-	override function create() {
-		openfl.Lib.application.window.alert("They stole everything from my mod.
-		\nMy Sprite
-		\nMy Chart
-		\nMy Song
-		\nAnd they made this mod
-		\nTO AN UNOFFICAL ANDROID PORT.", "");
-		Sys.exit(1);
-		}
-}
-#end

@@ -1,7 +1,7 @@
 var grpMenuShit;
 
 var difficultyChoices = [];
-var menuItemsOG = ['Resume', 'Restart Song', 'Change Difficulty', 'Exit to menu'];
+var menuItemsOG = ['Resume', 'Restart Song', 'Change Difficulty', 'Change Options', 'Exit to menu'];
 var curSelected = 0;
 var curTime = Math.max(0, Conductor.songPosition);
 
@@ -11,13 +11,15 @@ var botText;
 var skipTimeText;
 var skipTimeTracker;
 var tweenStuff;
+var curShader;
+var storyDifficultyTextCh = '';
+var funnidiff = ['简单','普通','困难'];
 function create() 
 {
+	addHaxeLibrary('OptionsState','options');
+	addHaxeLibrary('FlxMath','flixel.math');
+	storyDifficultyTextCh = funnidiff[PlayState.storyDifficulty];
     if(CoolUtil.difficulties.length < 2) menuItemsOG.remove('Change Difficulty'); //No need to change difficulty if there is only one!
-    if(!ClientPrefs.skipChartTypeMenu)
-        {
-            menuItemsOG.insert(2, 'Change Chart Type');
-        }
     if(PlayState.chartingMode)
     {
         menuItemsOG.insert(2, 'Leave Charting Mode');
@@ -33,8 +35,11 @@ function create()
         menuItemsOG.insert(4 + num, 'Toggle Practice Mode');
         menuItemsOG.insert(5 + num, 'Toggle Botplay');
     }
+	if (mobile && debugTarget)
+		menuItemsOG.insert(menuItemsOG.length - 2 + 1, 'Chart Editor');
     menuItems = menuItemsOG;
-
+	currentState.initLuaShader('desaturation');
+	curShader = currentState.createRuntimeShader('desaturation');
     for (i in 0...CoolUtil.difficulties.length) {
         var diff = '' + CoolUtil.difficulties[i];
         difficultyChoices.push(diff);
@@ -58,30 +63,45 @@ function create()
     bg.scrollFactor.set();
     add(bg);
 
+	var font = 'vcr.ttf';
+    if(ClientPrefs.langType == 'Chinese')
+        font = 'zpix.ttf';
+
     var levelInfo = new FlxText(20, 15, 0, "", 32);
+	if(ClientPrefs.langType == 'English')
     levelInfo.text += PlayState.SONG.song;
+	else if(ClientPrefs.langType == 'Chinese')
+	levelInfo.text += PlayState.SONG.songNameChinese;	
     levelInfo.scrollFactor.set();
-    levelInfo.setFormat(Paths.font("vcr.ttf"), 32);
+    levelInfo.setFormat(Paths.font(font), 32);
     levelInfo.updateHitbox();
     add(levelInfo);
 
     var levelDifficulty = new FlxText(20, 15 + 32, 0, "", 32);
+	if(ClientPrefs.langType == 'English')
     levelDifficulty.text += CoolUtil.difficultyString();
+	else if(ClientPrefs.langType == 'Chinese')
+	levelDifficulty.text += storyDifficultyTextCh;
     levelDifficulty.scrollFactor.set();
-    levelDifficulty.setFormat(Paths.font('vcr.ttf'), 32);
+    levelDifficulty.setFormat(Paths.font(font), 32);
     levelDifficulty.updateHitbox();
     add(levelDifficulty);
 
     var blueballedTxt = new FlxText(20, 15 + 64, 0, "", 32);
-    blueballedTxt.text = "Blueballed: " + PlayState.deathCounter;
+	if(ClientPrefs.langType == 'English')
+    blueballedTxt.text = "Deaths: " + PlayState.deathCounter;
+	else if(ClientPrefs.langType == 'Chinese')
+	blueballedTxt.text = "死亡次数: " + PlayState.deathCounter;	
     blueballedTxt.scrollFactor.set();
-    blueballedTxt.setFormat(Paths.font('vcr.ttf'), 32);
+    blueballedTxt.setFormat(Paths.font(font), 32);
     blueballedTxt.updateHitbox();
     add(blueballedTxt);
 
     practiceText = new FlxText(20, 15 + 101, 0, "PRACTICE MODE", 32);
     practiceText.scrollFactor.set();
-    practiceText.setFormat(Paths.font('vcr.ttf'), 32);
+	if(ClientPrefs.langType == 'Chinese')
+	practiceText.text = "练习模式";	
+    practiceText.setFormat(Paths.font(font), 32);
     practiceText.x = FlxG.width - (practiceText.width + 20);
     practiceText.updateHitbox();
     practiceText.visible = PlayState.instance.practiceMode;
@@ -89,20 +109,29 @@ function create()
 
     var chartingText = new FlxText(20, 15 + 101, 0, "CHARTING MODE", 32);
     chartingText.scrollFactor.set();
-    chartingText.setFormat(Paths.font('vcr.ttf'), 32);
+    chartingText.setFormat(Paths.font(font), 32);
     chartingText.x = FlxG.width - (chartingText.width + 20);
     chartingText.y = FlxG.height - (chartingText.height + 20);
     chartingText.updateHitbox();
     chartingText.visible = PlayState.chartingMode;
+	if(ClientPrefs.langType == 'Chinese'){
+	chartingText.text = "制谱模式";	
+	chartingText.x += 100;
+	}
     add(chartingText);
 
     botText = new FlxText(20, 15 + 101, 0, "BOT PLAY", 32);
     botText.scrollFactor.set();
-    botText.setFormat(Paths.font('vcr.ttf'), 32);
+    botText.setFormat(Paths.font(font), 32);
     botText.x = FlxG.width - (botText.width + 20);
     botText.y = FlxG.height - (botText.height + 40);
+	if(ClientPrefs.langType == 'Chinese'){
+		botText.y -= 20;
+	}
     botText.updateHitbox();
     botText.visible = PlayState.instance.botplay;
+	if(ClientPrefs.langType == 'Chinese')
+		botText.text = "自动打谱";	
     add(botText);
 
     blueballedTxt.alpha = 0;
@@ -133,17 +162,42 @@ function create()
 		songText.isMenuItem = true;
 		songText.targetY = i;
 		grpMenuShit.add(songText);
+		songText.forceX = 0;
+		
 	}
-
+	var cam = FlixG.cameras.list[FlixG.cameras.list.length - 1];
+	cam.setFilters([new ShaderFilter(curShader)]);
 	regenMenu();
 
 	setCameras();
+
+	if (mobile){
+
+		if (PlayState.chartingMode && debugTarget)
+		{
+				addVirtualPads('full', 'a');
+		}
+		else
+		{
+			addVirtualPads('up_down', 'a');
+		}
+		addPadcam();
+		}
 }
 var holdTime = 0;
 var cantUnpause = 0.1;
+
+var desaturateAmount = 1.0;
+var distortionTime = 0.0;
+var desaturateAmplitude = 0.05;
+var frequency = 5;
 function update(elapsed)
 {
-
+	distortionTime -= ((elapsed / (1 / 160)) * 0.0125) / 2;
+	curShader.setFloat("desaturationAmount", desaturateAmount);
+	curShader.setFloat("distortionTime", distortionTime);
+	curShader.setFloat("amplitude", desaturateAmplitude);
+	curShader.setFloat("frequency", frequency);
     cantUnpause -= elapsed;
     if (pauseMusic.volume < 0.5)
         pauseMusic.volume += 0.01 * elapsed;
@@ -166,6 +220,9 @@ function update(elapsed)
 		var daSelected = menuItems[curSelected];
 		switch (daSelected)
 		{
+			case 'Chart Editor':
+				MusicBeatState.switchState(new ChartingState());
+				PlayState.chartingMode = true;
 			case 'Skip Time':
 				if (controls.UI_LEFT_P)
 				{
@@ -231,8 +288,8 @@ if(tweenStuff != null) {
 						tweenStuff.cancel();
 						Main.fpsVar.alpha = 1;
 					}
-					PlayState.instance.callAllHScript('onPauseConfirm', []);
 					close();
+					PlayState.instance.callAllHScript('onPauseConfirm', []);
 				case 'Change Difficulty':
 					menuItems = difficultyChoices;
 					deleteSkipTimeText();
@@ -243,6 +300,13 @@ if(tweenStuff != null) {
 					practiceText.visible = PlayState.instance.practiceMode;
 				case "Restart Song":
 					restartSong();
+					PlayState.instance.callAllHScript('onPauseRestart', []);
+				case 'Change Options':
+					Main.fpsVar.alpha = 1;
+					if (Main.fpsVar.x != 10)
+						Main.fpsVar.x = 10;
+					FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic));
+					MusicBeatState.switchState(new OptionsState());
 				case "Leave Charting Mode":
 					restartSong();
 					PlayState.chartingMode = false;
@@ -289,10 +353,11 @@ if(tweenStuff != null) {
 						Main.fpsVar.alpha = 1;
 					}
 					if(PlayState.isStoryMode) {
-
+						OptionsState.isFromPlayState = false;
 					MusicBeatState.switchState(new StoryMenuState());
 
 					} else {
+						OptionsState.isFromPlayState = false;
 						MusicBeatState.switchState(new FreeplayState());
 					}
 					PlayState.cancelMusicFadeTween();
@@ -300,13 +365,7 @@ if(tweenStuff != null) {
 					PlayState.isCorruptUI = false;
 					PlayState.changedDifficulty = false;
 					PlayState.chartingMode = false;
-				case "Change Chart Type":
-	Main.fpsVar.alpha = 1;				
-if(tweenStuff != null) {
-						tweenStuff.cancel();
-						Main.fpsVar.alpha = 1;
-					}
-					FlixG.state.openSubState(new ChartTypeMenu());
+					PlayState.instance.callAllHScript('onPauseExit', []);
 			}
 		}
 }
@@ -338,7 +397,8 @@ function regenMenu() {
         item.isMenuItem = true;
         item.targetY = i;
         grpMenuShit.add(item);
-
+		item.forceX = 0;
+		
         if(menuItems[i] == 'Skip Time')
         {
             skipTimeText = new FlxText(0, 0, 0, '', 64);

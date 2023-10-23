@@ -8,7 +8,7 @@ class FlxTransWindow
         res = SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
         if (res)
         {
-            SetLayeredWindowAttributes(hWnd, RGB(1, 1, 1), 0, LWA_COLORKEY);
+            SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
         }
     ')
 	static public function getWindowsTransparent(res:Int = 0)
@@ -21,7 +21,7 @@ class FlxTransWindow
         res = SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) ^ WS_EX_LAYERED);
         if (res)
         {
-            SetLayeredWindowAttributes(hWnd, RGB(1, 1, 1), 1, LWA_COLORKEY);
+            SetLayeredWindowAttributes(hWnd, RGB(0, 0, 0), 1, LWA_COLORKEY);
         }
     ')
 	static public function getWindowsbackward(res:Int = 0)

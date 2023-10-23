@@ -27,15 +27,25 @@ import hscript.InterpEx;
 import hscript.Interp;
 import flixel.FlxG;
 #if VIDEOS_ALLOWED
-import FlxVideo;
-//import vlc.MP4Handler;
+
+#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideo as FlxVideo;
+#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler as FlxVideo;
+#elseif (hxCodec == "2.6.0") import VideoHandler as FlxVideo;
+#else import vlc.VideoHandler as FlxVideo; #end
+#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideoSprite; #end
+#end
+#if mobile
+import flixel.group.FlxGroup;
+import android.FlxHitbox;
+import android.FlxVirtualPad;
+import flixel.ui.FlxButton;
 #end
 import hscript.Parser;
 import hscript.ParserEx;
 import hscript.ClassDeclEx;
 import plugins.tools.MetroSprite;
 class PluginManager {
-    public static var interp = createSimpleInterpEx();
+    public static var interp = new InterpEx();
     public static var hscriptClasses:Array<String> = [];
     public static var hscriptInstances:Array<Dynamic> = [];
     //private static var nextId:Int = 1;
@@ -66,11 +76,15 @@ class PluginManager {
      */
     public static function createSimpleInterp():Interp {
         var reterp = new Interp();
+        reterp.allowStaticVariables = true;
+        reterp.allowPublicVariables = true;
         reterp = addVarsToInterp(reterp);
         return reterp;
     }
     public static function createSimpleInterpEx():InterpEx {
         var reterp = new InterpEx();
+        reterp.allowStaticVariables = true;
+        reterp.allowPublicVariables = true;
         reterp = addVarsToInterpEx(reterp);
         return reterp;
     }
@@ -79,8 +93,10 @@ class PluginManager {
 	}
 
     public static function addVarsToInterp<T:Interp>(interp:T):T {
+        		interp.variables.set("SUtil", SUtil);
 		interp.variables.set("Conductor", Conductor);
 		interp.variables.set("FlxSprite", DynamicSprite);
+        interp.variables.set("MetroSprite", MetroSprite);
         interp.variables.set("AttachedSprite", AttachedSprite);
 		interp.variables.set("FlxSound", DynamicSound);
 		interp.variables.set("FlxAtlasFrames", DynamicSprite.DynamicAtlasFrames);
@@ -88,10 +104,18 @@ class PluginManager {
 		interp.variables.set("FlxAngle", flixel.math.FlxAngle);
 		interp.variables.set("FlxMath", flixel.math.FlxMath);
 		interp.variables.set("TitleState", TitleState);
+        #if mobile
+        interp.variables.set("FlxActionMode", FlxActionMode);
+        interp.variables.set("FlxDPadMode", FlxDPadMode);
+        interp.variables.set("FlxVirtualPad", FlxVirtualPad);
+        #end
+
 		interp.variables.set("makeRangeArray", CoolUtil.numberArray);
 		interp.variables.set("FNFAssets", FNFAssets);
+        interp.variables.set("Paths", Paths);
         interp.variables.set("CoolUtil", CoolUtil);
         interp.variables.set("Main", Main);
+        interp.variables.set("Reflect", Reflect);
         interp.variables.set("AtlasFrameMaker", AtlasFrameMaker);
         interp.variables.set("FlxCamera", FlxCamera);
         interp.variables.set("Function_Continue", FunkinLua.Function_Continue);
@@ -100,6 +124,7 @@ class PluginManager {
         #if VIDEOS_ALLOWED
        // interp.variables.set("MP4Handler", MP4Handler);
         interp.variables.set("FlxVideo", FlxVideo);
+        interp.variables.set("FlxVideoSprite", FlxVideoSprite);
 #end
 
 		// : )
@@ -113,6 +138,16 @@ class PluginManager {
 		interp.variables.set("Character", Character);
         interp.variables.set("FlxText", FlxText);
         interp.variables.set("FlxTextBorderStyle", FlxTextBorderStyle);
+        #if mobile
+        interp.variables.set("FlxActionMode", FlxActionMode);
+        interp.variables.set("FlxDPadMode", FlxDPadMode);
+        interp.variables.set("FlxVirtualPad", FlxVirtualPad);
+        #end
+        #if mobile
+        interp.variables.set("mobile", true);
+#else
+interp.variables.set("mobile", false);
+#end
         interp.variables.set("FlxBackdrop", FlxBackdrop);
         interp.variables.set("privateAccess", privateAccess);
         interp.variables.set("FlxRect", FlxRect);
@@ -138,11 +173,12 @@ class PluginManager {
 			}
 		}
     public static function addVarsToInterpEx<T:InterpEx>(interp:T):T {
+        interp.variables.set("SUtil", SUtil);
 		interp.variables.set("Conductor", Conductor);
 		interp.variables.set("FlxSprite", DynamicSprite);
         interp.variables.set("AttachedSprite", AttachedSprite);
-		interp.variables.set("FlxSound", DynamicSound);
         interp.variables.set("MetroSprite", MetroSprite);
+		interp.variables.set("FlxSound", DynamicSound);
 		interp.variables.set("FlxAtlasFrames", DynamicSprite.DynamicAtlasFrames);
 		interp.variables.set("FlxGroup", flixel.group.FlxGroup);
 		interp.variables.set("FlxAngle", flixel.math.FlxAngle);
@@ -154,11 +190,13 @@ class PluginManager {
         interp.variables.set("Main", Main);
         interp.variables.set("AtlasFrameMaker", AtlasFrameMaker);
         interp.variables.set("FlxCamera", FlxCamera);
+        interp.variables.set("Reflect", Reflect);
         #if VIDEOS_ALLOWED
        // interp.variables.set("MP4Handler", MP4Handler);
         interp.variables.set("FlxVideo", FlxVideo);
+        interp.variables.set("FlxVideoSprite", FlxVideoSprite);
 #end
-
+interp.variables.set("Paths", Paths);
 		// : )
 		interp.variables.set("FlxG", HscriptGlobals);
 		interp.variables.set("FlxTimer", flixel.util.FlxTimer);
@@ -420,7 +458,7 @@ class HscriptSoundFrontEndWrapper {
     }
     public function load(?EmbeddedSound:FlxSoundAsset, Volume = 1.0, Looped = false, ?Group, AutoDestroy = false, AutoPlay = false, ?URL, ?OnComplete) {
         if ((EmbeddedSound is String)) {
-            var sound = FNFAssets.getSound(EmbeddedSound);
+            var sound = FNFAssets.getSound(SUtil.getPath() + EmbeddedSound);
             return wrapping.load(sound, Volume, Looped, Group, AutoDestroy, AutoPlay, URL, OnComplete);
         }
         return wrapping.load(EmbeddedSound, Volume, Looped, Group, AutoDestroy, AutoPlay, URL, OnComplete);
@@ -430,7 +468,7 @@ class HscriptSoundFrontEndWrapper {
     }
     public function play(EmbeddedSound:FlxSoundAsset, Volume = 1.0, Looped = false, ?Group, AutoDestroy = true, ?OnComplete) {
         if ((EmbeddedSound is String)) {
-            var sound = FNFAssets.getSound(EmbeddedSound);
+            var sound = FNFAssets.getSound(SUtil.getPath() + EmbeddedSound);
             return wrapping.play(sound, Volume, Looped, Group, AutoDestroy, OnComplete);
         }
         return wrapping.play(EmbeddedSound, Volume, Looped, Group, AutoDestroy, OnComplete);

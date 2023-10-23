@@ -36,6 +36,11 @@ import flixel.addons.display.FlxRuntimeShader;
 import hscript.InterpEx;
 import sys.FileSystem;
 import sys.io.File;
+#if mobile
+import flixel.input.actions.FlxActionInput;
+import android.AndroidControls.AndroidControls;
+import android.FlxVirtualPad;
+#end
 class StoryMenuState extends MusicBeatState
 {
 	public static var weekCompleted:Map<String, Bool> = new Map<String, Bool>();
@@ -189,7 +194,8 @@ catch (e)
 public function makeHaxeState(usehaxe:String, path:String, filename:String) {
 	trace("opening a haxe state (because we are cool :))");
 	var parser = new ParserEx();
-	var program = parser.parseString(FNFAssets.getHscript(path + filename));
+	parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
+	var program = parser.parseString(FNFAssets.getHscript(SUtil.getPath() + path + filename));
 	var interp = PluginManager.createSimpleInterp();
 	// set vars
 	interp.variables.set("preload", preload);
@@ -200,6 +206,19 @@ public function makeHaxeState(usehaxe:String, path:String, filename:String) {
 	interp.variables.set("achiAllow", achiAllow);
 	interp.variables.set("Json", Json);
 	interp.variables.set("Date", Date);
+	#if mobile
+	interp.variables.set("addVirtualPad", addVirtualPad);
+	interp.variables.set("removeVirtualPad", removeVirtualPad);
+	interp.variables.set("addPadCamera", addPadCamera);
+	interp.variables.set("addAndroidControls", addAndroidControls);
+	interp.variables.set("_virtualpad", _virtualpad);
+	interp.variables.set("dPadModeFromString", dPadModeFromString);
+	interp.variables.set("actionModeModeFromString", actionModeModeFromString);
+
+	#end
+	interp.variables.set("addVirtualPads", addVirtualPads);
+	interp.variables.set("visPressed", visPressed);
+
 	interp.variables.set("StoryMenuState", StoryMenuState);
 	interp.variables.set("FreeplayState", FreeplayState);
 	interp.variables.set("switchTarget", switchTarget);
@@ -225,7 +244,7 @@ public function makeHaxeState(usehaxe:String, path:String, filename:String) {
 	interp.variables.set("Highscore", Highscore);
 	interp.variables.set("FlxCamera", FlxCamera);
 	interp.variables.set("openSubState", openSubState);
-
+	interp.variables.set("closeSubState", closeSubState);
 	interp.variables.set("FlxTransitionableState", FlxTransitionableState);
 	interp.variables.set("MainMenuState", MainMenuState);
 	interp.variables.set("FlxTypedGroup", FlxTypedGroup);
@@ -257,7 +276,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	interp.variables.set("insert", insert);
 	interp.variables.set("pi", Math.PI);
 	interp.variables.set("curMusicName", Main.curMusicName);
-	interp.variables.set("hscriptPath", path);
+	interp.variables.set("hscriptPath", SUtil.getPath() + path);
 	interp.variables.set('callAllHscript', function(func_name:String, args:Array<Dynamic>) {
 		return callAllHScript(func_name, args);
 	});
@@ -405,6 +424,49 @@ function togglePersistUpdate(toggle:Bool)
 		return false;
 	}
 	#end
+	function addVirtualPads(dPad:String,act:String){
+		#if mobile
+		addVirtualPad(dPadModeFromString(dPad),actionModeModeFromString(act));
+		#end
+	}
+	#if mobile
+	public function dPadModeFromString(lmao:String):FlxDPadMode{
+	switch (lmao){
+	case 'up_down':return FlxDPadMode.UP_DOWN;
+	case 'left_right':return FlxDPadMode.LEFT_RIGHT;
+	case 'up_left_right':return FlxDPadMode.UP_LEFT_RIGHT;
+	case 'full':return FlxDPadMode.FULL;
+	case 'right_full':return FlxDPadMode.RIGHT_FULL;
+	case 'none':return FlxDPadMode.NONE;
+	}
+	return FlxDPadMode.NONE;
+	}
+	public function actionModeModeFromString(lmao:String):FlxActionMode{
+		switch (lmao){
+		case 'a':return FlxActionMode.A;
+		case 'b':return FlxActionMode.B;
+		case 'd':return FlxActionMode.D;
+		case 'a_b':return FlxActionMode.A_B;
+		case 'a_b_c':return FlxActionMode.A_B_C;
+		case 'a_b_e':return FlxActionMode.A_B_E;
+		case 'a_b_7':return FlxActionMode.A_B_7;
+		case 'a_b_x_y':return FlxActionMode.A_B_X_Y;
+		case 'a_b_c_x_y':return FlxActionMode.A_B_C_X_Y;
+		case 'a_b_c_x_y_z':return FlxActionMode.A_B_C_X_Y_Z;
+		case 'full':return FlxActionMode.FULL;
+		case 'none':return FlxActionMode.NONE;
+		}
+		return FlxActionMode.NONE;
+		}
+	#end
+	public function visPressed(dumbass:String = ''):Bool{
+		#if mobile
+		
+		return _virtualpad.returnPressed(dumbass);
+		#else
+		return false;
+		#end
+	}
 	override function update(elapsed:Float)
 		{
 			super.update(elapsed);

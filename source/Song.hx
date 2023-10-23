@@ -15,8 +15,8 @@ using StringTools;
 typedef SwagSong =
 {
 	var song:String;
-	var songNameChinese:String;
 	var notes:Array<SwagSection>;
+	var songNameChinese:String;
 	var events:Array<Dynamic>;
 	var bpm:Float;
 	var uiType:String;
@@ -30,6 +30,7 @@ typedef SwagSong =
 	var arrowSkin:String;
 	var splashSkin:String;
 	var validScore:Bool;
+	var composer:String;
 	//var mania:Null<Int>;
 }
 
@@ -38,6 +39,7 @@ class Song
 	public var uiType:String = 'normal';
 	public var song:String;
 	public var songNameChinese:String = '';
+	public var composer:String = null;
 	public var notes:Array<SwagSection>;
 	public var events:Array<Dynamic>;
 	public var bpm:Float;
@@ -53,7 +55,6 @@ class Song
 	private static function onLoadJson(songJson:Dynamic) // Convert old charts to newest format
 	{
 		
-
 		if (songJson.uiType == null) {
 
 			songJson.uiType = switch (songJson.song.toLowerCase()) {
@@ -111,7 +112,7 @@ class Song
 
 		if(rawJson == null) {
 			#if sys
-			rawJson = File.getContent(Paths.json(formattedFolder + '/' + formattedSong)).trim();
+			rawJson = File.getContent(SUtil.getPath() + Paths.json(formattedFolder + '/' + formattedSong)).trim();
 			#else
 			rawJson = Assets.getText(Paths.json(formattedFolder + '/' + formattedSong)).trim();
 			#end
@@ -142,22 +143,25 @@ class Song
 		var songJson:Dynamic = parseJSONshit(rawJson);
 		if(jsonInput != 'events') StageData.loadDirectory(songJson);
 		onLoadJson(songJson);
-
 		if (songJson.songNameChinese == null){
-			songJson.songNameChinese = songJson.song;
+			songJson.songNameChinese = switch (songJson.song.toLowerCase()) {
+				default:
+					songJson.song;
+			
+			}
 		}
 		if (songJson.stage == null) {
 			// sw-switch case :fuckboy:
 			songJson.stage = switch (songJson.song.toLowerCase()) {
 				case 'spookeez' | 'monster' | 'south':
 					'spooky';
-				case 'philly nice' | 'pico' | 'blammed':
+				case 'philly-nice' | 'philly nice' | 'pico' | 'blammed':
 					'philly';
-				case 'milf' | 'high' | 'satin panties':
+				case 'milf' | 'high' | 'satin panties'| 'satin-panties':
 					'limo';
 				case 'cocoa' | 'eggnog':
 					'mall';
-				case 'winter horrorland':
+				case 'winter horrorland' | 'winter-horrorland':
 					'mallEvil';
 				case 'senpai' | 'roses':
 					'school';
@@ -194,6 +198,7 @@ class Song
 			}
 
 		}
+		
 		if (songJson.cutsceneType == null) {
 			switch (songJson.song.toLowerCase()) {
 				case 'roses':
@@ -204,7 +209,7 @@ class Song
 					songJson.cutsceneType = 'monster';
 				case 'thorns':
 					songJson.cutsceneType = 'spirit';
-				case 'winter-horrorland':
+				case 'winter horrorland' | 'winter-horrorland':
 					songJson.cutsceneType = 'winter-horrorland';
 					case 'ugh':
 						songJson.cutsceneType = 'ugh';
@@ -214,6 +219,22 @@ class Song
 						songJson.cutsceneType = 'stress';
 				default:
 					songJson.cutsceneType = 'none';
+			}
+		}
+		if (songJson.composer == null) {
+			switch (songJson.song.toLowerCase()) {
+				case 'monster' | 'winter horrorland' | 'winter-horrorland':
+					songJson.composer = 'bassetfilms';
+				case 'Tutorial' | 'bopeebo' | 'fresh' | 'dad battle' | 'dadbattle' | 'dad-battle' |
+				'spookeez' | 'south' | 
+				'philly-nice' | 'philly nice' | 'pico' | 'blammed' |
+				'milf' | 'high' | 'satin panties'| 'satin-panties' |
+				'cocoa' | 'eggnog' |
+				'senpai' | 'roses' | 'thorns' | 
+				'ugh' | 'stress' | 'guns':
+					songJson.composer = 'Kawai Sprite';
+					default:
+					songJson.composer = 'IDK';
 			}
 		}
 		return songJson;

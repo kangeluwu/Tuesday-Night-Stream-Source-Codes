@@ -1,6 +1,6 @@
 
 
-
+var bgs/*:Array<Dynamic>*/ = [];
 var songs = [];
 var iconArray = [];
 var selector;
@@ -15,14 +15,30 @@ var lerpScore = 0;
 var lerpRating = 0;
 var intendedScore = 0;
 var intendedRating = 0;
-
+var funnidiff = ['简单','普通','困难'];
+var diffStuff = '';
 var bg;
 var intendedColor;
 var curPlaying = false;
 var colorTween;
+var unlockStuff = [false,false,false,false];
+var curShader;
 function create()
 {
+	FlixG.autoPause = true;
+	if (curDifficulty < 0)
+		diffStuff = '简单';	
+			else
+		diffStuff = funnidiff[curDifficulty];
+	if (Main.fpsVar.x != 10)
+	Main.fpsVar.x = 10;
+
+
+
+	FlixG.mouse.visible = true;
 	addHaxeLibrary('LoadingState');
+	addHaxeLibrary('FlxBackdrop','flixel.addons.display');
+	addHaxeLibrary('FlxGradient','flixel.util');
 	addHaxeLibrary('Song');
 	togglePersistUpdate(true);
 		PlayState.isStoryMode = false;
@@ -36,9 +52,12 @@ for (i in 0...WeekData.weeksList.length) {
 			var leChars = [];
 
 			for (j in 0...leWeek.songs.length)
-			{
+			{var wasExtra = false;
+		
+			
 				leSongs.push(leWeek.songs[j][0]);
 				leChars.push(leWeek.songs[j][1]);
+				
 			}
 
 			WeekData.setDirectoryFromWeek(leWeek);
@@ -68,6 +87,7 @@ for (i in 0...WeekData.weeksList.length) {
 		bg.antialiasing = ClientPrefs.globalAntialiasing;
 		add(bg);
 		bg.screenCenter();
+		bgs.push(bg);
 
 	grpSongs = new FlxTypedGroup();
 	add(grpSongs);
@@ -78,7 +98,8 @@ for (i in 0...WeekData.weeksList.length) {
 			songText.isMenuItem = true;
 			songText.targetY = i;
 			grpSongs.add(songText);
-
+			songText.itemType = "D-Shape";
+			songText.xAdd -= 200;
 			if (songText.width > 980)
 			{
 				var textScale= 980 / songText.width;
@@ -99,7 +120,7 @@ for (i in 0...WeekData.weeksList.length) {
 			// using a FlxGroup is too much fuss!
 			iconArray.push(icon);
 			add(icon);
-
+			
 			// songText.x += 40;
 			// DONT PUT X IN THE FIRST PARAMETER OF new ALPHABET() !!
 			// songText.screenCenter(X);
@@ -107,11 +128,16 @@ for (i in 0...WeekData.weeksList.length) {
 
 		}
 		WeekData.setDirectoryFromWeek();
-	
+		var font = 'vcr.ttf';
+		if(ClientPrefs.langType == 'Chinese')
+			font = 'zpix.ttf';
 		scoreText = new FlxText(FlxG.width * 0.7, 5, 0, "", 32);
-		scoreText.setFormat(Paths.font("vcr.ttf"), 32, OGcolor, 'right');
+		scoreText.setFormat(Paths.font(font), 32, OGcolor, 'right');
 
-		scoreBG = new FlxSprite(scoreText.x - 6, 0).makeGraphic(1, 66, 0xFF000000);
+		var heg = 66;
+		if(ClientPrefs.langType == 'Chinese')
+			heg = 70;
+		scoreBG = new FlxSprite(scoreText.x - 6, 0).makeGraphic(1, heg, 0xFF000000);
 		scoreBG.alpha = 0.6;
 		add(scoreBG);
 
@@ -140,17 +166,39 @@ for (i in 0...WeekData.weeksList.length) {
 var leText = "";
 var size = 16;
 		if (preload){
-		 leText = "Press SPACE to listen to the Song / Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.";
-		 size = 16;
+			if (mobile){
+				
+				leText = "Press X to listen to the Song / Press C to open the Gameplay Changers Menu / Press Y to Reset your Score and Accuracy.";
+				if(ClientPrefs.langType == 'Chinese')
+			   leText = "按“X”键来听取歌曲/按“C”键来打开游玩设置界面/按“Y”键来重置你的得分和准确率.";
+				size = 16;
+			}
+				   else{
+					leText = "Press SPACE to listen to the Song / Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.";
+					if(ClientPrefs.langType == 'Chinese')
+				   leText = "按“空格”键来听取歌曲/按“ctrl”键来打开游玩设置界面/按重置键来重置你的得分和准确率.";
+					size = 16;
+				   }
+		
 		}else{
 		 leText = "Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.";
+		 if(ClientPrefs.langType == 'Chinese')
+		leText = "按“ctrl”键来打开游玩设置界面/按重置键来重置你的得分和准确率.";
 		 size = 18;
 }
 		var text = new FlxText(textBG.x, textBG.y + 4, FlxG.width, leText, size);
-		text.setFormat(Paths.font("vcr.ttf"), size, OGcolor, 'right');
+		text.setFormat(Paths.font(font), size, OGcolor, 'right');
 		text.scrollFactor.set();
 		add(text);
-
+		if (ClientPrefs.classicStyle){
+			textBG.alpha = 0;
+			text.alpha = 0;
+		}
+		currentFreeplayState.initLuaShader('desaturation');
+		curShader = currentFreeplayState.createRuntimeShader('desaturation');
+FlixG.camera.setFilters([new ShaderFilter(curShader)]);
+if (mobile)
+	addVirtualPads('full', 'a_b_c_x_y_z');
 }
 function closeSubState() {
 	changeSelection(0, false);
@@ -171,8 +219,18 @@ var instPlaying = -1;
 var holdTime = 0;
 var instStuff = '';
 var voicesStuff = '';
+var desaturateAmount = 1.0;
+var distortionTime = 0.0;
+var desaturateAmplitude = 0.05;
+var frequency = 5;
 function update(elapsed)
 {
+	distortionTime -= ((elapsed / (1 / 400)) * 0.0125);
+	curShader.setFloat("desaturationAmount", desaturateAmount);
+	curShader.setFloat("distortionTime", distortionTime);
+	curShader.setFloat("amplitude", desaturateAmplitude);
+	curShader.setFloat("frequency", frequency);
+
 
 	// :grief: what
 	if (FlixG.sound.music.volume < 0.7)
@@ -182,6 +240,7 @@ function update(elapsed)
 	// why the fuck does this exist
 	lerpScore = Math.floor(FlxMath.lerp(lerpScore, intendedScore, CoolUtil.boundTo(elapsed * 24, 0, 1)));
 		lerpRating = FlxMath.lerp(lerpRating, intendedRating, CoolUtil.boundTo(elapsed * 12, 0, 1));
+		
 		if (Math.abs(lerpScore - intendedScore) <= 10)
 			lerpScore = intendedScore;
 		if (Math.abs(lerpRating - intendedRating) <= 0.01)
@@ -195,18 +254,27 @@ function update(elapsed)
 		while(ratingSplit[1].length < 2) { //Less than 2 decimals in it, add decimals then
 			ratingSplit[1] += '0';
 		}
-
+		if(ClientPrefs.langType == 'English'){
+		if (!ClientPrefs.classicStyle)
 		scoreText.text = 'PERSONAL BEST: ' + lerpScore + ' (' + ratingSplit.join('.') + '%)';
+		else
+		scoreText.text = 'PERSONAL BEST:' + lerpScore;
+	}else if(ClientPrefs.langType == 'Chinese'){
+		if (!ClientPrefs.classicStyle)
+		scoreText.text = '个人最好: ' + lerpScore + ' (' + ratingSplit.join('.') + '%)';
+		else
+		scoreText.text = '个人最好:' + lerpScore;
+	}
 		positionHighscore();
 
 		var upP = controls.UI_UP_P;
 		var downP = controls.UI_DOWN_P;
 		var accepted = controls.ACCEPT;
-		var space = FlixG.keys.justPressed.SPACE;
-		var ctrl = FlixG.keys.justPressed.CONTROL;
+		var space = FlixG.keys.justPressed.SPACE || visPressed('X');
+		var ctrl = FlixG.keys.justPressed.CONTROL || visPressed('C');
 
 		var shiftMult = 1;
-		if(FlixG.keys.pressed.SHIFT) shiftMult = 3;
+		if(FlixG.keys.pressed.SHIFT || visPressed('Z')) shiftMult = 3;
 
 		if(songs.length > 1)
 		{
@@ -304,20 +372,20 @@ function update(elapsed)
 }
 			}
 		}
-
-		else if(controls.RESET)
+		if(!space && (controls.RESET || visPressed('Y')))
 		{
 			togglePersistUpdate(false);
 			openSubState(new ResetScoreSubState(songs[curSelected].songName, curDifficulty, songs[curSelected].songCharacter));
 			FlixG.sound.play(Paths.sound('scrollMenu'));
 		}
-		if (accepted)
+		if (!space && accepted)
 		{
 			enter();
 		}
 }
 function enter()
 	{
+		FlixG.mouse.visible = false;
 		togglePersistUpdate(false);
 			var songLowercase = Paths.formatToSongPath(songs[curSelected].songName);
 			var poop = Highscore.formatSong(songLowercase, curDifficulty);
@@ -342,15 +410,17 @@ function enter()
 				colorTween.cancel();
 			}
 
-			if (FlixG.keys.pressed.SHIFT){
-				LoadingState.loadAndSwitchState(new ChartingState());
+			if (debugTarget && FlixG.keys.pressed.SHIFT|| visPressed('Z')){
+				chartConfrim();
 			}else{
 				if (!ClientPrefs.skipChartTypeMenu){
+					togglePersistUpdate(false);
 					openSubState(new ChartTypeMenu());
 				}
-				else
+				else{
 					LoadingState.loadAndSwitchState(new PlayState(), true);
 						FlixG.sound.music.volume = 0;
+				}
 			}
 					
 			destroyFreeplayVocals();
@@ -365,13 +435,21 @@ function changeDiff(change)
 			curDifficulty = 0;
 
 		lastDifficultyName = CoolUtil.difficulties[curDifficulty];
-
+		if (curDifficulty < 0)
+			diffStuff = '简单';	
+				else
+			diffStuff = funnidiff[curDifficulty];
 		if (!switchTarget){
 		intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty);
 		intendedRating = Highscore.getRating(songs[curSelected].songName, curDifficulty);
 }
 		PlayState.storyDifficulty = curDifficulty;
+		if(ClientPrefs.langType == 'English'){
 		diffText.text = '< ' + CoolUtil.difficultyString() + ' >';
+		}
+		else if(ClientPrefs.langType == 'Chinese'){
+			diffText.text = '< ' + diffStuff + ' >';
+			}
 		positionHighscore();
 		if (PlayState.SONG != null && FNFAssets.exists(Paths.inst(PlayState.SONG.song,'-' + CoolUtil.difficulties[curDifficulty])))
 			instStuff = '-' + CoolUtil.difficulties[curDifficulty];
@@ -460,8 +538,8 @@ function changeSelection(change, playSound)
 
 		CoolUtil.difficulties = CoolUtil.defaultDifficulties.copy();
 		var diffStr = WeekData.getCurrentWeek().difficulties;
-		if(diffStr != null) diffStr = diffStr.trim(); //Fuck you HTML5
-
+		if(diffStr != null) diffStr = StringTools.trim(diffStr); //Fuck you HTML5
+	
 		if(diffStr != null && diffStr.length > 0)
 		{
 			var diffs = diffStr.split(',');
@@ -470,18 +548,17 @@ function changeSelection(change, playSound)
 			{
 				if(diffs[i] != null)
 				{
-					diffs[i] = diffs[i].trim();
+					diffs[i] = StringTools.trim(diffs[i]);
 					if(diffs[i].length < 1) diffs.remove(diffs[i]);
 				}
 				--i;
 			}
-
+	
 			if(diffs.length > 0 && diffs[0].length > 0)
 			{
 				CoolUtil.difficulties = diffs;
 			}
 		}
-		
 		if(CoolUtil.difficulties.contains(CoolUtil.defaultDifficulty))
 		{
 			curDifficulty = Math.round(Math.max(0, CoolUtil.defaultDifficulties.indexOf(CoolUtil.defaultDifficulty)));

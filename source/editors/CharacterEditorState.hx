@@ -1,5 +1,5 @@
 package editors;
-#if (sys)
+
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -200,7 +200,9 @@ class CharacterEditorState extends MusicBeatState
 
 		FlxG.mouse.visible = true;
 		reloadCharacterOptions();
-
+		#if mobile
+		addVirtualPad(FULL, A_B_C_X_Y_Z);
+        #end
 		super.create();
 	}
 
@@ -925,13 +927,13 @@ class CharacterEditorState extends MusicBeatState
 		ghostChar = new Character(0, 0, daAnim, !isDad);
 		ghostChar.debugMode = true;
 		ghostChar.alpha = 0.6;
-		ghostChar.inEdtior = true;
+
 		char = new Character(0, 0, daAnim, !isDad);
 		if(char.animationsArray[0] != null) {
 			char.playAnim(char.animationsArray[0].anim, true);
 		}
 		char.debugMode = true;
-		char.inEdtior = true;
+
 		charLayer.add(ghostChar);
 		charLayer.add(char);
 
@@ -1045,7 +1047,7 @@ class CharacterEditorState extends MusicBeatState
 
 		#if MODS_ALLOWED
 		characterList = [];
-		var directories:Array<String> = [Paths.mods('characters/'), Paths.mods(Paths.currentModDirectory + '/characters/'), Paths.getPreloadPath('characters/')];
+		var directories:Array<String> = [Paths.mods('characters/'), Paths.mods(Paths.currentModDirectory + '/characters/'), SUtil.getPath() + Paths.getPreloadPath('characters/')];
 		for(mod in Paths.getGlobalMods())
 			directories.push(Paths.mods(mod + '/characters/'));
 		for (i in 0...directories.length) {
@@ -1297,12 +1299,15 @@ class CharacterEditorState extends MusicBeatState
 		var data:String = Json.stringify(json, "\t");
 
 		if (data.length > 0)
-		{
+		{    #if mobile
+			SUtil.saveContent(daAnim, data,".json");
+			#else
 			_file = new FileReference();
 			_file.addEventListener(Event.COMPLETE, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, daAnim + ".json");
+			#end
 		}
 	}
 
@@ -1316,17 +1321,3 @@ class CharacterEditorState extends MusicBeatState
 		return text;
 	}
 }
-#else
-class CharacterEditorState extends MusicBeatState
-{
-	public function new(youare:String = 'lier!', alier:Bool = true)
-		{
-			super();
-		}
-		override function create()
-			{
-				openfl.Lib.application.window.alert("NO WAY!", "");
-				Sys.exit(1);
-			}
-}
-#end

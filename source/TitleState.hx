@@ -46,6 +46,11 @@ import hscript.ParserEx;
 import hscript.InterpEx;
 import openfl.Lib;
 using StringTools;
+#if mobile
+import flixel.input.actions.FlxActionInput;
+import android.AndroidControls.AndroidControls;
+import android.FlxVirtualPad;
+#end
 import Type.ValueType;
 import flixel.addons.display.FlxRuntimeShader;
 typedef TitleData =
@@ -122,7 +127,11 @@ var titleEaster = true;
 #else
 var titleEaster = false;
 #end
-
+#if mobile
+var mobile = true;
+#else
+var mobile = false;
+#end
 	function callHscript(func_name:String, args:Array<Dynamic>, usehaxe:String) {
 		// if function doesn't exist
 			if (!hscriptStates.get(usehaxe).variables.exists(func_name)) {
@@ -218,7 +227,8 @@ var titleEaster = false;
 	function makeHaxeState(usehaxe:String, path:String, filename:String) {
 		trace("opening a haxe state (because we are cool :))");
 		var parser = new ParserEx();
-		var program = parser.parseString(FNFAssets.getHscript(path + filename));
+	parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
+		var program = parser.parseString(FNFAssets.getHscript(SUtil.getPath() + path + filename));
 		var interp = PluginManager.createSimpleInterp();
 		// set vars
 		interp.variables.set("doHidden", doHidden);
@@ -235,6 +245,7 @@ var titleEaster = false;
 		interp.variables.set("FlxRuntimeShader", FlxRuntimeShader);
 interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		interp.variables.set("Paths", Paths);
+
 		interp.variables.set("watermark", watermark);
 		interp.variables.set("OGcolor", FlxColor.WHITE);
 		interp.variables.set("BlackColor", FlxColor.BLACK);
@@ -266,10 +277,17 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		interp.variables.set("interpolate", interpolate);
 		interp.variables.set("remove", remove);
 		interp.variables.set("controls", controls);
+		#if mobile
+		interp.variables.set("addVirtualPad", addVirtualPad);
+		interp.variables.set("removeVirtualPad", removeVirtualPad);
+		interp.variables.set("addPadCamera", addPadCamera);
+		interp.variables.set("addAndroidControls", addAndroidControls);
+		interp.variables.set("mobile", mobile);
+		#end
 		interp.variables.set("insert", insert);
 		interp.variables.set("pi", Math.PI);
 		interp.variables.set("curMusicName", Main.curMusicName);
-		interp.variables.set("hscriptPath", path);
+		interp.variables.set("hscriptPath", SUtil.getPath() + path);
 		interp.variables.set('callAllHscript', function(func_name:String, args:Array<Dynamic>) {
 			return callAllHScript(func_name, args);
 		});
@@ -431,7 +449,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		FlxG.sound.volumeDownKeys = volumeDownKeys;
 		FlxG.sound.volumeUpKeys = volumeUpKeys;
 		FlxG.keys.preventDefaultKeys = [TAB];
-
+		PluginManager.init();
 		PlayerSettings.init();
 		super.create();
 
@@ -442,7 +460,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		#if CHECK_FOR_UPDATES
 		if(ClientPrefs.checkForUpdates && !closedState) {
 			trace('checking for update');
-			var http = new haxe.Http("https://raw.githubusercontent.com/ShadowMario/FNF-PsychEngine/main/gitVersion.txt");
+			var http = new haxe.Http("https://raw.githubusercontent.com/kangeluwu/Raincandy-Engine/main/gitVersion.txt");
 
 			http.onData = function (data:String)
 			{

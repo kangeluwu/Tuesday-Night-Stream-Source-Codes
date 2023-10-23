@@ -5,7 +5,9 @@ import flixel.util.FlxTimer;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxGradient;
+#if desktop
 import Discord.DiscordClient;
+#end
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
@@ -28,7 +30,6 @@ class ChartTypeMenu extends MusicBeatSubstate
     var camLerp:Float = 0.12;
     var blackBarThingie:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
     public var camHUDLOL:FlxCamera = new FlxCamera();
-    var tele:FlxSprite = new FlxSprite(0,0).makeGraphic(FlxG.width, 300, 0xFF000000);
     public function new()
     {
         super();
@@ -54,8 +55,8 @@ class ChartTypeMenu extends MusicBeatSubstate
         menuItems = new FlxTypedGroup<FlxSprite>();
         add(menuItems);
         
-        var texImage = FNFAssets.getBitmapData('windose_data/images/chartTypes.png');
-        var texXml = FNFAssets.getText('windose_data/images/chartTypes.xml');
+        var texImage = FNFAssets.getBitmapData(SUtil.getPath() + 'windose_data/images/chartTypes.png');
+        var texXml = FNFAssets.getText(SUtil.getPath() + 'windose_data/images/chartTypes.xml');
 		for (i in 0...optionShit.length)
 		{
 			var menuItem:FlxSprite = new FlxSprite(-250, 30);
@@ -77,13 +78,15 @@ class ChartTypeMenu extends MusicBeatSubstate
 
         camFollow = new FlxObject(0, 0, 1, 1);
 		add(camFollow);
-        add(tele);
-        tele.alpha = 0.001;
+
         new FlxTimer().start(0.1, function(tmr:FlxTimer)
 			{
 				selectable = true;
                 FlxG.camera.follow(camFollow, null, camLerp);
 			});
+            #if android
+            addVirtualPad(UP_DOWN, A_B);
+            #end
     }
 
     var selectable:Bool = false;
@@ -111,7 +114,7 @@ class ChartTypeMenu extends MusicBeatSubstate
 
             if (controls.BACK)
                 {
-                    MusicBeatState.resetState();
+                    FlxG.resetState();
                     selectedSomethin = true;
                 }
         
@@ -158,13 +161,17 @@ class ChartTypeMenu extends MusicBeatSubstate
 
                 FlxG.sound.play(Paths.sound('confirmMenu'));
 
-                FlxTween.tween(tele, { alpha: 1}, 1.5);
 
-	new FlxTimer().start(2.3, function(tmr:FlxTimer)
+
+                FlxTween.tween(FlxG.camera, { alpha:0}, 1.3, { ease: FlxEase.quartInOut});
+                FlxTween.tween(camFollow, { y:5000}, 1.3, { ease: FlxEase.quartInOut,
+                    onComplete: function(twn:FlxTween)
+                    {			new FlxTimer().start(1, function(tmr:FlxTimer)
                         {
                         PlayState.chartType = Std.string(optionShit[curSelected]);
                         LoadingState.loadAndSwitchState(new PlayState(), true);
                     });
+                    }});
 
 
 

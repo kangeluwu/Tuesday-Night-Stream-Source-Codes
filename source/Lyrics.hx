@@ -9,7 +9,7 @@ import PlayState;
 import sys.io.File;
 import sys.FileSystem;
 using StringTools;
-
+//From lullaby XD
 /**
  * The Lyric system is a little complicated but that's because I wanted to do something neat with it!
  * basically, you'll input the point of steps (1 by default, the starting step), then for each "/" used within the lyrics
@@ -27,8 +27,10 @@ typedef LyricMeasure = {
  * i might be a little proud of this system LOL
  */
 class Lyrics extends FlxTypedGroup<FlxText> {
-    public static function parseLyrics(file:String) {
-            var lyricsFile = File.getContent(file).trim();
+    public static function parseLyrics(song:String,name:String = null) {
+            if (name == null)
+                name = 'lyrics';
+            var lyricsFile = File.getContent(Paths.json(Paths.formatToSongPath(song) + '/' + name)).trim();
             while (!lyricsFile.endsWith("}"))
                 lyricsFile = lyricsFile.substr(0, lyricsFile.length - 1);
 

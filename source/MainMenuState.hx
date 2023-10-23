@@ -24,7 +24,18 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.group.FlxGroup;
 using StringTools;
 import openfl.Lib;
-import FlxVideo;
+#if VIDEOS_ALLOWED
+#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideo as FlxVideo;
+#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler as FlxVideo;
+#elseif (hxCodec == "2.6.0") import VideoHandler as FlxVideo;
+#else import vlc.VideoHandler as FlxVideo; #end
+#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideoSprite; #end
+#end
+#if mobile
+import flixel.input.actions.FlxActionInput;
+import android.AndroidControls.AndroidControls;
+import android.FlxVirtualPad;
+#end
 import haxe.Json;
 import flixel.util.FlxTimer;
 import hscript.Interp;
@@ -33,9 +44,6 @@ import hscript.ParserEx;
 import hscript.InterpEx;
 import openfl.display.BlendMode;
 import flixel.util.FlxAxes;
-import flixel.addons.display.FlxRuntimeShader;
-import sys.FileSystem;
-import sys.io.File;
 class MainMenuState extends MusicBeatState
 {
 	public static var RCEVersion:String = '0.1.5'; //This is also used for Discord RPC
@@ -70,11 +78,6 @@ var desktop = true;
 #else
 var desktop = false;
 #end
-#if HIDDEN_ALLOWED
-var doHidden = true;
-#else
-var doHidden = false;
-#end
 #if debug
 var debugTarget = true;
 #else
@@ -85,80 +88,15 @@ var luaallowed = true;
 #else
 var luaallowed = false;
 #end
+#if mobile
+var mobile = true;
+#else
+var mobile = false;
+#end
 var hscriptStates:Map<String, Interp> = [];
 var exInterp:InterpEx = new InterpEx();
 var haxeSprites:Map<String, FlxSprite> = [];
 var haxeVars:Map<String, Dynamic> = [];
-#if sys
-	public var runtimeShaders:Map<String, Array<String>> = new Map<String, Array<String>>();
-	public function createRuntimeShader(name:String):FlxRuntimeShader
-	{
-
-
-		#if (MODS_ALLOWED && sys)
-		if(!runtimeShaders.exists(name) && !initLuaShader(name))
-		{
-			FlxG.log.warn('Shader $name is missing!');
-			return new FlxRuntimeShader();
-		}
-
-		var arr:Array<String> = runtimeShaders.get(name);
-		return new FlxRuntimeShader(arr[0], arr[1]);
-		#else
-		FlxG.log.warn("Platform unsupported for Runtime Shaders!");
-		return null;
-		#end
-	}
-
-	public function initLuaShader(name:String, ?glslVersion:Int = 120)
-	{
-
-		if(runtimeShaders.exists(name))
-		{
-			FlxG.log.warn('Shader $name was already initialized!');
-			return true;
-		}
-
-		var foldersToCheck:Array<String> = [Paths.getPreloadPath('shaders/'),Paths.mods('shaders/')];
-		if(Paths.currentModDirectory != null && Paths.currentModDirectory.length > 0)
-			foldersToCheck.insert(0, Paths.mods(Paths.currentModDirectory + '/shaders/'));
-
-		for(mod in Paths.getGlobalMods())
-			foldersToCheck.insert(0, Paths.mods(mod + '/shaders/'));
-		
-		for (folder in foldersToCheck)
-		{
-			if(FileSystem.exists(folder))
-			{
-				var frag:String = folder + name + '.frag';
-				var vert:String = folder + name + '.vert';
-				var found:Bool = false;
-				if(FileSystem.exists(frag))
-				{
-					frag = File.getContent(frag);
-					found = true;
-				}
-				else frag = null;
-
-				if (FileSystem.exists(vert))
-				{
-					vert = File.getContent(vert);
-					found = true;
-				}
-				else vert = null;
-
-				if(found)
-				{
-					runtimeShaders.set(name, [frag, vert]);
-					//trace('Found shader $name!');
-					return true;
-				}
-			}
-		}
-		FlxG.log.warn('Missing shader $name .frag AND .vert files!');
-		return false;
-	}
-	#end
 function callHscript(func_name:String, args:Array<Dynamic>, usehaxe:String) {
 	// if function doesn't exist
 		if (!hscriptStates.get(usehaxe).variables.exists(func_name)) {
@@ -254,22 +192,20 @@ catch (e)
 function makeHaxeState(usehaxe:String, path:String, filename:String) {
 	trace("opening a haxe state (because we are cool :))");
 	var parser = new ParserEx();
-	var program = parser.parseString(FNFAssets.getHscript(path + filename));
+	parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
+	var program = parser.parseString(FNFAssets.getHscript(SUtil.getPath() + path + filename));
 	var interp = PluginManager.createSimpleInterp();
 	// set vars
-	interp.variables.set("doHidden", doHidden);
 	interp.variables.set("debugTarget", debugTarget);
 	interp.variables.set("CoolUtil", CoolUtil);
 	interp.variables.set("linuxTarget", linuxTarget);
 	interp.variables.set("achiAllow", achiAllow);
 	interp.variables.set("Json", Json);
 	interp.variables.set("Date", Date);
-	interp.variables.set("FlxRuntimeShader", FlxRuntimeShader);
-interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	interp.variables.set("StoryMenuState", StoryMenuState);
 	interp.variables.set("FreeplayState", FreeplayState);
 	interp.variables.set("switchTarget", switchTarget);
-	interp.variables.set("ColorSwap", ColorSwap);
+
 	interp.variables.set("Achievements", Achievements);
 	interp.variables.set("modsAllow", modsAllow);
 	interp.variables.set("desktop", desktop);
@@ -278,6 +214,25 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	interp.variables.set("FlxTextBorderStyle", FlxTextBorderStyle);
 	interp.variables.set("controls", controls);
 	interp.variables.set("OGcolor", FlxColor.WHITE);
+	#if mobile
+	interp.variables.set("addVirtualPad", addVirtualPad);
+	interp.variables.set("removeVirtualPad", removeVirtualPad);
+	interp.variables.set("addPadCamera", addPadCamera);
+	interp.variables.set("addAndroidControls", addAndroidControls);
+	interp.variables.set("_virtualpad", _virtualpad);
+	interp.variables.set("dPadModeFromString", dPadModeFromString);
+	interp.variables.set("actionModeModeFromString", actionModeModeFromString);
+
+	#end
+	interp.variables.set("addVirtualPads", addVirtualPads);
+	interp.variables.set("visPressed", visPressed);
+ #if mobile
+ interp.variables.set("damn", true);
+ #else
+ interp.variables.set("damn", false);
+ #end
+	interp.variables.set("mobile", mobile);
+
 	interp.variables.set("BlackColor", FlxColor.BLACK);
 	interp.variables.set("BlueColor", FlxColor.BLUE);
 	interp.variables.set("RedColor", FlxColor.RED);
@@ -286,6 +241,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	interp.variables.set("YellowColor", FlxColor.YELLOW);
 	interp.variables.set("CyanColor", FlxColor.CYAN);
 	interp.variables.set("FlxObject", FlxObject);
+	
 	interp.variables.set("FlxCamera", FlxCamera);
 	interp.variables.set("FlxTransitionableState", FlxTransitionableState);
 	interp.variables.set("MainMenuState", MainMenuState);
@@ -302,10 +258,8 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	interp.variables.set("curBeat", 0);
 	interp.variables.set("currentMainMenuState", this);
 	interp.variables.set("add", add);
-	interp.variables.set("fromRGB", fromRGB);
 	interp.variables.set("remove", remove);
 	interp.variables.set("X", FlxAxes.X);
-	interp.variables.set("Y", FlxAxes.Y);
 	interp.variables.set("Application", Application);
 	interp.variables.set("togglePersistUpdate", togglePersistUpdate);
 	interp.variables.set("togglePersistentDraw", togglePersistentDraw);
@@ -313,7 +267,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	interp.variables.set("insert", insert);
 	interp.variables.set("pi", Math.PI);
 	interp.variables.set("curMusicName", Main.curMusicName);
-	interp.variables.set("hscriptPath", path);
+	interp.variables.set("hscriptPath", SUtil.getPath() + path);
 	interp.variables.set('callAllHscript', function(func_name:String, args:Array<Dynamic>) {
 		return callAllHScript(func_name, args);
 	});
@@ -352,14 +306,6 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 
 		}
 }
-function fromRGB(red:Int, green:Int, blue:Int, alpha:Int = 255):FlxColor
-	{
-		return FlxColor.fromRGB(red, green, blue,alpha);
-	}
-	function interpolate(color1:FlxColor, color2:FlxColor, factor:Float = 0.5):FlxColor
-		{
-			return FlxColor.interpolate(color1, color2, factor);
-		}
 function togglePersistUpdate(toggle:Bool)
 {
 	persistentUpdate = toggle;
@@ -377,6 +323,47 @@ function changeCurMusicName(newName:String):String
 	Main.curMusicName = newName;
 	setAllHaxeVar('curMusicName', newName);
 	return (newName);
+}
+function addVirtualPads(dPad:String,act:String){
+	#if mobile
+	addVirtualPad(dPadModeFromString(dPad),actionModeModeFromString(act));
+	#end
+}
+#if mobile
+public function dPadModeFromString(lmao:String):FlxDPadMode{
+switch (lmao){
+case 'up_down':return FlxDPadMode.UP_DOWN;
+case 'left_right':return FlxDPadMode.LEFT_RIGHT;
+case 'up_left_right':return FlxDPadMode.UP_LEFT_RIGHT;
+case 'full':return FlxDPadMode.FULL;
+case 'right_full':return FlxDPadMode.RIGHT_FULL;
+case 'none':return FlxDPadMode.NONE;
+}
+return FlxDPadMode.NONE;
+}
+public function actionModeModeFromString(lmao:String):FlxActionMode{
+	switch (lmao){
+	case 'a':return FlxActionMode.A;
+	case 'b':return FlxActionMode.B;
+	case 'd':return FlxActionMode.D;
+	case 'a_b':return FlxActionMode.A_B;
+	case 'a_b_c':return FlxActionMode.A_B_C;
+	case 'a_b_e':return FlxActionMode.A_B_E;
+	case 'a_b_7':return FlxActionMode.A_B_7;
+	case 'a_b_x_y':return FlxActionMode.A_B_X_Y;
+	case 'a_b_c_x_y':return FlxActionMode.A_B_C_X_Y;
+	case 'a_b_c_x_y_z':return FlxActionMode.A_B_C_X_Y_Z;
+	case 'full':return FlxActionMode.FULL;
+	}
+	return FlxActionMode.NONE;
+	}
+#end
+public function visPressed(dumbass:String = ''):Bool{
+	#if mobile
+	return _virtualpad.returnPressed(dumbass);
+	#else
+	return false;
+	#end
 }
 function coolURL(url:String):String
 	{
@@ -408,7 +395,7 @@ function coolURL(url:String):String
 			super.beatHit();
 			setAllHaxeVar('curBeat', curBeat);
 	
-		
+			if (hscriptStates.get('mainmenu').variables.exists('beatHit'))
 				callAllHScript('beatHit', [curBeat]);
 		}
 		override function stepHit()
@@ -416,12 +403,7 @@ function coolURL(url:String):String
 				super.stepHit();
 				setAllHaxeVar('curStep', curStep);
 		
-			
-					callAllHScript('beatHit', [curStep]);
-			}
-			function doConfrim(){
-				#if (sys)
-				MusicBeatState.switchState(new MasterEditorMenu());
-				#end
+				if (hscriptStates.get('mainmenu').variables.exists('stepHit'))
+					callAllHScript('curStep', [curStep]);
 			}
 	}

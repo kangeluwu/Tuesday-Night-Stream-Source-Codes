@@ -48,11 +48,16 @@ import flixel.effects.FlxFlicker;
 import flixel.util.FlxAxes;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFrame;
-#if desktop
+#if VIDEOS_ALLOWED
+#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideo as FlxVideo;
+#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler as FlxVideo;
+#elseif (hxCodec == "2.6.0") import VideoHandler as FlxVideo;
+#else import vlc.VideoHandler as FlxVideo; #end
+#if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideoSprite; #end
+#end
 import Sys;
 import sys.FileSystem;
 import sys.io.File;
-#end
 
 #if sys
 
@@ -68,7 +73,11 @@ import hscript.Parser;
 import hscript.ParserEx;
 import hscript.InterpEx;
 import hscript.ClassDeclEx;
-
+#if mobile
+import flixel.input.actions.FlxActionInput;
+import android.AndroidControls.AndroidControls;
+import android.FlxVirtualPad;
+#end
 import haxe.Json;
 import tjson.TJSON;
 using StringTools;
@@ -291,6 +300,7 @@ function setAllHaxeVar(name:String, value:Dynamic) {
 	function makeHaxeState(usehaxe:String, path:String, filename:String) {
 		trace("opening a haxe state (because we are cool :))");
 		var parser = new ParserEx();
+	parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
 		var program = parser.parseString(FNFAssets.getHscript(path + filename));
 		var interp = PluginManager.createSimpleInterp();
 		// set vars
@@ -320,6 +330,7 @@ function setAllHaxeVar(name:String, value:Dynamic) {
 		interp.variables.set("StoryMenuState", StoryMenuState);
 		interp.variables.set("FreeplayState", FreeplayState);
 		interp.variables.set("CreditsState", CreditsState);
+		interp.variables.set("DialogueBoxCustom", DialogueBoxCustom);
 		interp.variables.set("makeHaxeState", makeHaxeState);
 		interp.variables.set("Controls", Controls);
 		interp.variables.set("Map", haxe.ds.StringMap);
@@ -356,15 +367,27 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		interp.variables.set("CustomState", CustomState);
 		interp.variables.set("DialogueBox", DialogueBox);
 		interp.variables.set("DialogueBoxMPlus", DialogueBoxMPlus);
-		interp.variables.set("DialogueBoxCustom", DialogueBoxCustom);
 		interp.variables.set("FileParser", FileParser);
 
 		interp.variables.set("FlxUIDropDownMenuCustom", FlxUIDropDownMenuCustom);
-
+#if VIDEOS_ALLOWED
 		interp.variables.set("FlxVideo", FlxVideo);
+#end
 		interp.variables.set("GameOverSubstate", GameOverSubstate);
 		interp.variables.set("PauseSubState", PauseSubState);
-
+		#if mobile
+		interp.variables.set("addVirtualPad", addVirtualPad);
+		interp.variables.set("removeVirtualPad", removeVirtualPad);
+		interp.variables.set("addPadCamera", addPadCamera);
+		interp.variables.set("addAndroidControls", addAndroidControls);
+		interp.variables.set("_virtualpad", _virtualpad);
+		interp.variables.set("dPadModeFromString", dPadModeFromString);
+		interp.variables.set("actionModeModeFromString", actionModeModeFromString);
+	
+		#end
+		interp.variables.set("addVirtualPads", addVirtualPads);
+		interp.variables.set("visPressed", visPressed);
+	
 		interp.variables.set("Judgement", Judgement);
 		interp.variables.set("MenuCharacter", MenuCharacter);
 		interp.variables.set("MenuItem", MenuItem);
@@ -445,7 +468,49 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		trace('executed');
 		}
 	}
-
+	function addVirtualPads(dPad:String,act:String){
+		#if mobile
+		addVirtualPad(dPadModeFromString(dPad),actionModeModeFromString(act));
+		#end
+	}
+	#if mobile
+	public function dPadModeFromString(lmao:String):FlxDPadMode{
+	switch (lmao){
+	case 'up_down':return FlxDPadMode.UP_DOWN;
+	case 'left_right':return FlxDPadMode.LEFT_RIGHT;
+	case 'up_left_right':return FlxDPadMode.UP_LEFT_RIGHT;
+	case 'full':return FlxDPadMode.FULL;
+	case 'right_full':return FlxDPadMode.RIGHT_FULL;
+	case 'none':return FlxDPadMode.NONE;
+	}
+	return FlxDPadMode.NONE;
+	}
+	public function actionModeModeFromString(lmao:String):FlxActionMode{
+		switch (lmao){
+		case 'a':return FlxActionMode.A;
+		case 'b':return FlxActionMode.B;
+		case 'd':return FlxActionMode.D;
+		case 'a_b':return FlxActionMode.A_B;
+		case 'a_b_c':return FlxActionMode.A_B_C;
+		case 'a_b_e':return FlxActionMode.A_B_E;
+		case 'a_b_7':return FlxActionMode.A_B_7;
+		case 'a_b_x_y':return FlxActionMode.A_B_X_Y;
+		case 'a_b_c_x_y':return FlxActionMode.A_B_C_X_Y;
+		case 'a_b_c_x_y_z':return FlxActionMode.A_B_C_X_Y_Z;
+		case 'full':return FlxActionMode.FULL;
+		case 'none':return FlxActionMode.NONE;
+		}
+		return FlxActionMode.NONE;
+		}
+	#end
+	public function visPressed(dumbass:String = ''):Bool{
+		#if mobile
+		
+		return _virtualpad.returnPressed(dumbass);
+		#else
+		return false;
+		#end
+	}
 	override function create()
 	{
 		Paths.clearStoredMemory(); //Clean the stored cache to prevent crash

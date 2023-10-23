@@ -1,5 +1,5 @@
 package editors;
-#if (sys)
+
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -114,7 +114,9 @@ class WeekEditorState extends MusicBeatState
 		reloadAllShit();
 
 		FlxG.mouse.visible = true;
-
+		#if mobile
+		addVirtualPad(UP_DOWN, NONE);
+        #end
 		super.create();
 	}
 
@@ -536,12 +538,15 @@ class WeekEditorState extends MusicBeatState
 	public static function saveWeek(weekFile:WeekFile) {
 		var data:String = Json.stringify(weekFile, "\t");
 		if (data.length > 0)
-		{
+		{                        #if mobile
+			SUtil.saveContent(weekFileName, data, ".json");
+			#else
 			_file = new FileReference();
 			_file.addEventListener(Event.COMPLETE, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, weekFileName + ".json");
+			#end
 		}
 	}
 	
@@ -818,12 +823,3 @@ class WeekEditorFreeplayState extends MusicBeatState
 		super.update(elapsed);
 	}
 }
-#else
-class WeekEditorState extends MusicBeatState
-{
-	override function create() {
-		openfl.Lib.application.window.alert("NO MORE.", "");
-		Sys.exit(1);
-		}
-}
-#end

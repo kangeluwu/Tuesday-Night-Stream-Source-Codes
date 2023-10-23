@@ -186,18 +186,12 @@ addOption(option);
 	
 			changedMusic = true;
 		}
+		#if !mobile
+		function onChangeFPSCounter()
+		{
+			if(Main.fpsVar != null)
+				Main.fpsVar.visible = ClientPrefs.showFPS;
+		}
+		#end
+	}
 	
-	override function destroy()
-	{
-		if(changedMusic) FlxG.sound.playMusic(Paths.music(ClientPrefs.menuMusic));
-		super.destroy();
-	}
-
-	#if !mobile
-	function onChangeFPSCounter()
-	{
-		if(Main.fpsVar != null)
-			Main.fpsVar.visible = ClientPrefs.showFPS;
-	}
-	#end
-}

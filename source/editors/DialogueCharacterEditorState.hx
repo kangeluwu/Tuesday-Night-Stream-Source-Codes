@@ -1,5 +1,5 @@
 package editors;
-#if (sys)
+
 #if desktop
 import Discord.DiscordClient;
 #end
@@ -156,7 +156,9 @@ class DialogueCharacterEditorState extends MusicBeatState
 		addEditorBox();
 		FlxG.mouse.visible = true;
 		updateCharTypeBox();
-		
+		#if mobile
+		addVirtualPad(FULL, A_B_C);
+        #end
 		super.create();
 	}
 
@@ -777,12 +779,15 @@ class DialogueCharacterEditorState extends MusicBeatState
 		{
 			var splittedImage:Array<String> = imageInputText.text.trim().split('_');
 			var characterName:String = splittedImage[0].toLowerCase().replace(' ', '');
-
+			#if mobile
+			SUtil.saveContent(characterName, data, ".json");
+			#else
 			_file = new FileReference();
 			_file.addEventListener(Event.COMPLETE, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, characterName + ".json");
+			#end
 		}
 	}
 
@@ -828,13 +833,3 @@ class DialogueCharacterEditorState extends MusicBeatState
 		return text;
 	}
 }
-#else
-class DialogueCharacterEditorState extends MusicBeatState
-{
-	override function create()
-		{
-			openfl.Lib.application.window.alert("nope.", "");
-			Sys.exit(1);
-		}
-}
-#end

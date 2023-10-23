@@ -1,5 +1,5 @@
 package;
-
+#if desktop
 import Sys.sleep;
 import discord_rpc.DiscordRpc;
 
@@ -17,7 +17,7 @@ class DiscordClient
 	{
 		trace("Discord Client starting...");
 		DiscordRpc.start({
-			clientID: "863222024192262205",
+			clientID: "1119543015703326780",
 			onReady: onReady,
 			onError: onError,
 			onDisconnected: onDisconnected
@@ -45,7 +45,7 @@ class DiscordClient
 			details: "In the Menus",
 			state: null,
 			largeImageKey: 'icon',
-			largeImageText: "Psych Engine"
+			largeImageText: "Raincandy Engine"
 		});
 	}
 
@@ -100,3 +100,4 @@ class DiscordClient
 	}
 	#end
 }
+#end

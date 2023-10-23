@@ -1,5 +1,5 @@
 package;
-
+import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSubState;
@@ -28,10 +28,17 @@ import hscript.Parser;
 import hscript.ParserEx;
 import hscript.InterpEx;
 import flixel.FlxSprite;
-
+#if mobile
+import flixel.input.actions.FlxActionInput;
+import android.AndroidControls.AndroidControls;
+import android.FlxVirtualPad;
+#end
 import haxe.Json;
 import tjson.TJSON;
 using StringTools;
+#if android
+import android.Hardware;
+#end
 class GameOverSubstate extends MusicBeatSubstate
 {
 	var hscriptStates:Map<String, Interp> = [];
@@ -183,10 +190,12 @@ class GameOverSubstate extends MusicBeatSubstate
 	function makeHaxeState(usehaxe:String, path:String, filename:String) {
 		trace("opening a haxe state (because we are cool :))");
 		var parser = new ParserEx();
-		var program = parser.parseString(FNFAssets.getHscript(path + filename));
+	parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
+		var program = parser.parseString(FNFAssets.getHscript(SUtil.getPath() + path + filename));
 		var interp = PluginManager.createSimpleInterp();
 		// set vars
 		interp.variables.set("Sys", Sys);
+		
 		interp.variables.set("controls", controls);
 		interp.variables.set("FlxRuntimeShader", FlxRuntimeShader);
 interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
@@ -213,6 +222,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		interp.variables.set("FlxPoint", FlxPoint);
 		interp.variables.set("WeekData", WeekData);
 		interp.variables.set("CreditsState", CreditsState);
+		interp.variables.set("FlxCamera", FlxCamera);
 		interp.variables.set("Controls", Controls);
 		interp.variables.set("flixelSave", FlxG.save);
 		interp.variables.set("Math", Math);
@@ -232,6 +242,19 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		interp.variables.set("allowDeath", allowDeath);
 		interp.variables.set("isDead", isDead);
 		interp.variables.set("customing", other);
+		#if mobile
+		interp.variables.set("addVirtualPad", addVirtualPad);
+		interp.variables.set("removeVirtualPad", removeVirtualPad);
+
+		interp.variables.set("addPadCamera", addPadCamera);
+		interp.variables.set("_virtualpad", _virtualpad);
+		interp.variables.set("dPadModeFromString", dPadModeFromString);
+		interp.variables.set("actionModeModeFromString", actionModeModeFromString);
+
+		#end
+		interp.variables.set("addVirtualPads", addVirtualPads);
+		interp.variables.set("addPadcam", addPadcam);
+		interp.variables.set("visPressed", visPressed);
 		interp.variables.set("characterName", characterName);
 		interp.variables.set("deathSoundName", deathSoundName);
 		interp.variables.set("loopSoundName", loopSoundName);
@@ -288,7 +311,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	public static var deathSoundName:String = 'fnf_loss_sfx';
 	public static var loopSoundName:String = 'gameOver';
 	public static var endSoundName:String = 'gameOverEnd';
-
+	public static var vibrationTime:Int = 500;//milliseconds
 	public static var instance:GameOverSubstate;
 
 	public static function resetVariables() {
@@ -296,6 +319,7 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		deathSoundName = 'fnf_loss_sfx';
 		loopSoundName = 'gameOver';
 		endSoundName = 'gameOverEnd';
+		vibrationTime = 500;
 	}
 
 	override function create()
@@ -303,16 +327,71 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 		instance = this;
 		PlayState.instance.callOnLuas('onGameOverStart', []);
 		callAllHScript('onCreate', []);
+		
 		super.create();
 	}
 
+	function addVirtualPads(dPad:String,act:String){
+		#if mobile
+		addVirtualPad(dPadModeFromString(dPad),actionModeModeFromString(act));
+		#end
+	}
+	#if mobile
+	public function dPadModeFromString(lmao:String):FlxDPadMode{
+	switch (lmao){
+	case 'up_down':return FlxDPadMode.UP_DOWN;
+	case 'left_right':return FlxDPadMode.LEFT_RIGHT;
+	case 'up_left_right':return FlxDPadMode.UP_LEFT_RIGHT;
+	case 'full':return FlxDPadMode.FULL;
+	case 'right_full':return FlxDPadMode.RIGHT_FULL;
+	case 'none':return FlxDPadMode.NONE;
+	}
+	return FlxDPadMode.NONE;
+	}
+	public function actionModeModeFromString(lmao:String):FlxActionMode{
+		switch (lmao){
+		case 'a':return FlxActionMode.A;
+		case 'b':return FlxActionMode.B;
+		case 'd':return FlxActionMode.D;
+		case 'a_b':return FlxActionMode.A_B;
+		case 'a_b_c':return FlxActionMode.A_B_C;
+		case 'a_b_e':return FlxActionMode.A_B_E;
+		case 'a_b_7':return FlxActionMode.A_B_7;
+		case 'a_b_x_y':return FlxActionMode.A_B_X_Y;
+		case 'a_b_c_x_y':return FlxActionMode.A_B_C_X_Y;
+		case 'a_b_c_x_y_z':return FlxActionMode.A_B_C_X_Y_Z;
+		case 'full':return FlxActionMode.FULL;
+		case 'none':return FlxActionMode.NONE;
+		}
+		return FlxActionMode.NONE;
+		}
+
+	#end
+	function addPadcam(){
+		#if mobile
+		addPadCamera();
+		#end
+	}
+	public function visPressed(dumbass:String = ''):Bool{
+		#if mobile
+		
+		return _virtualpad.returnPressed(dumbass);
+		#else
+		return false;
+		#end
+	}
 	public function new(x:Float, y:Float, camX:Float, camY:Float,?isPlayer:Bool = true)
 	{
 		super();
 		makeHaxeState("ded", "windose_data/scripts/custom_menus/", "GameOverSubstate");
 		callAllHScript("startDead", [x, y, camX, camY, isPlayer]);
 		PlayState.instance.setOnLuas('inGameOver', true);
-		
+		#if android
+		if(ClientPrefs.vibration)
+		{
+			Hardware.vibrate(vibrationTime);
+		}
+		#end
 	/*	if (FNFAssets.exists("windose_data/data/" + PlayState.SONG.song.toLowerCase() + "/gameover", Hscript))
 			{
 				makeHaxeState("gameover", "windose_data/data/" + PlayState.SONG.song.toLowerCase() + "/", "gameover");
@@ -363,6 +442,9 @@ interp.variables.set("ShaderFilter", openfl.filters.ShaderFilter);
 	{
 		FlxG.sound.playMusic(Paths.music(loopSoundName), volume);
 	}
-
+	function camerabgAlphaShits(cam:FlxCamera)
+		{
+			cam.bgColor.alpha = 0;
+		}
 	
 }

@@ -1,3 +1,5 @@
+import ColorSwap;
+import flixel.util.FlxColor;
 var blackScreen;
 var credGroup;
 var credTextShit;
@@ -16,6 +18,8 @@ var skippedIntro = false;
 
 function create() 
 {
+   
+    FlixG.autoPause = true;
     curWacky = getRandomObject(getIntroTextShit());
     //curWacky = ["CUIDADO", "GUAYANDO"];
     swagShader = new ColorSwap();
@@ -59,7 +63,7 @@ function create()
     });
 }
 }
-
+var camZoomingDecay = 1;
 var logoBl;
 var gfDance;
 var danceLeft = false;
@@ -72,12 +76,19 @@ function startIntro()
       //  makeTransition();
       trace('lmao');
       if(FlixG.sound.music == null) {
-        FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic), 0);
+        FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic));
     }
-    FlixG.sound.music.fadeIn(4, 0, 0.7);
     }
-
+switch (ClientPrefs.menuMusic){
+    case 'FreakyMenu':
     Conductor.changeBPM(titleJSON.bpm);
+    case 'Approval-Desire':
+        Conductor.changeBPM(165);
+        case 'Angels-Of-The-Apocalypse':
+            Conductor.changeBPM(124.97);
+            case 'Angel-Star-Tour-Song':
+                Conductor.changeBPM(85);
+}
     togglePersistUpdate(true);
 
     var bg = new FlxSprite();
@@ -165,9 +176,11 @@ function startIntro()
     titleText.frames = Paths.getSparrowAtlas('titleEnter');
 }
 var animFrames = [];
-
+privateAccess(function(){
     titleText.animation.findByPrefix(animFrames, "ENTER IDLE");
     titleText.animation.findByPrefix(animFrames, "ENTER FREEZE");
+});
+    
 
     if (animFrames.length > 0) {
         newTitle = true;
@@ -228,6 +241,11 @@ var animFrames = [];
         skipIntro();
     else
         TitleState.initialized = true;
+
+
+
+        if (Main.fpsVar.x != 10)
+            Main.fpsVar.x = 10;
 }
 
 function getIntroTextShit()
@@ -251,6 +269,9 @@ var newTitle = false;
 var titleTimer = 0;
 function update(elapsed)
 {
+
+    
+    FlxG.camera.zoom = FlxMath.lerp(1, FlxG.camera.zoom, CoolUtil.boundTo(1 - (elapsed * 3.125 * camZoomingDecay), 0, 1));
     if (FlixG.sound.music != null)
         Conductor.songPosition = FlixG.sound.music.time;
 
@@ -260,6 +281,15 @@ function update(elapsed)
     }
 
     var pressedEnter =  FlxG.keys.justPressed.ENTER || controls.ACCEPT;
+    if(mobile){
+        for (touch in FlixG.touches.list)
+        {
+            if (touch.justPressed)
+            {
+                pressedEnter = true;
+            }
+        }
+    }
 	if (newTitle) {
         titleTimer += CoolUtil.boundTo(elapsed, 0, 1);
         if (titleTimer > 2) titleTimer -= 2;
@@ -274,17 +304,17 @@ function update(elapsed)
 				
 				timer = FlxEase.quadInOut(timer);
 				
-				titleText.color = FlxColor.interpolate(titleTextColors[0], titleTextColors[1], timer);
+				titleText.color = interpolate(titleTextColors[0], titleTextColors[1], timer);
 				titleText.alpha = FlxMath.lerp(titleTextAlphas[0], titleTextAlphas[1], timer);
 			}
 			
 			if(pressedEnter)
 			{
-                trace('test');
+                if(titleText != null){
 				titleText.color = OGcolor;
 				titleText.alpha = 1;
-				
-				if(titleText != null) titleText.animation.play('press');
+				 titleText.animation.play('press');
+                }
 if (ClientPrefs.flashing)
     FlixG.camera.flash(OGcolor, 1);
 else
@@ -398,8 +428,21 @@ function deleteCoolText()
     }
 }
 var sickBeats = 0;
+function stepHit(step)
+    {
+        switch (ClientPrefs.menuMusic){
+            case 'Approval-Desire':
+                if (curBeat >= 88 && curBeat <= 92)
+               FlxG.camera.zoom += 0.15;
+        }   
+    }
 function beatHit(beat)
 {
+    switch (ClientPrefs.menuMusic){
+        case 'Approval-Desire':
+            if ((beat % 2 == 0 && beat >= 64 && beat < 80) || beat >= 80 && beat <88)
+           FlxG.camera.zoom += 0.15;
+    }
 	if(logoBl != null)
         logoBl.animation.play('bump', true);
 
@@ -417,11 +460,11 @@ function beatHit(beat)
         {
             case 1:
                 //FlxG.sound.music.stop();
-                FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic), 0);
-                FlixG.sound.music.fadeIn(4, 0, 0.7);
+                if(!FlixG.sound.music.playing) 
+                FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic));
             case 2:
                 if (watermark)
-                createCoolText(['Raincandy Engine by'], 15);
+                createCoolText(['Psych Engine by'], 15);
                 else
                 createCoolText(['ninjamuffin99', 'phantomArcade', 'kawaisprite', 'evilsk8er']);
 
@@ -439,45 +482,88 @@ function beatHit(beat)
             // credTextShit.addText();
             case 5:
                 deleteCoolText();
+            case 7:
+                if (watermark)
+                createCoolText(['Modding Plus Engine by'], 15);
+
+            // credTextShit.visible = true;
+            case 9:
+                if (watermark){
+                addMoreText('BullyVR', 15);
+                addMoreText('Axy', 15);
+                addMoreText('DJ Popsicle', 15);
+                }
+
+            // credTextShit.text += '\npresent...';
+            // credTextShit.addText();
+            case 10:
+                deleteCoolText();
             // credTextShit.visible = false;
             // credTextShit.text = 'In association \nwith';
             // credTextShit.screenCenter();
-            case 6:
+            case 11:
                 if (watermark)
-                createCoolText(['Not associated', 'with'], -40);
+                createCoolText(['A mod', 'made by'], -40);
                 else
                 createCoolText(['In association', 'with'], -40);
-            case 8:
+            case 13:
+                if (watermark){
+                    addMoreText('overdose crew', -40);
+                    addMoreText('and', -40);
+                    addMoreText('scarletion studio', -40);
+}
+                    else{
                 addMoreText('newgrounds', -40);
                 ngSpr.visible = true;
+                    }
             // credTextShit.text += '\nNewgrounds';
-            case 9:
+            case 14:
                 deleteCoolText();
+                if (!watermark)
                 ngSpr.visible = false;
             // credTextShit.visible = false;
 
             // credTextShit.text = 'Shoutouts Tom Fulp';
             // credTextShit.screenCenter();
-            case 10:
-                createCoolText([curWacky[0]],0);
+            case 15:
+                createCoolText(['Friday Night Funkin'],0);
+            case 17:
+                addMoreText('made by',0);  
+                addMoreText('ninjamuffin99',0);  
+                addMoreText('phantomArcade',0);  
+                addMoreText('kawaisprite',0);  
+                addMoreText('evilsk8er',0);  
             // credTextShit.visible = true;
-            case 12:
+            case 19:
+                deleteCoolText();
+
+            case 20:
+                createCoolText(['Needy Girl Overdose'],0);
+             case 22:
+              addMoreText('made by',0);  
+            addMoreText('WSS playground',0);  
+                // credTextShit.visible = true;
+                case 24:
+                    deleteCoolText();
+            case 25:
+                createCoolText([curWacky[0]],0);
+            case 26:
                 addMoreText(curWacky[1],0);
             // credTextShit.text += '\nlmao';
-            case 13:
+            case 28:
                 deleteCoolText();
             // credTextShit.visible = false;
             // credTextShit.text = "Friday";
             // credTextShit.screenCenter();
-            case 14:
-                addMoreText('Friday',0);
+            case 30:
+                addMoreText('Tuesday',0);
             // credTextShit.visible = true;
-            case 15:
+            case 31:
                 addMoreText('Night',0);
             // credTextShit.text += '\nNight';
-            case 16:
-                addMoreText('Funkin',0); // credTextShit.text += '\nFunkin';
-            case 17:
+            case 32:
+                addMoreText('Stream',0); // credTextShit.text += '\nFunkin';
+            case 33:
                 skipIntro();
         }
     }
@@ -512,8 +598,8 @@ function skipIntro()
 						skippedIntro = true;
 						playJingle = false;
 
-						FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic), 0);
-						FlixG.sound.music.fadeIn(4, 0, 0.7);
+						FlixG.sound.playMusic(Paths.music(ClientPrefs.menuMusic));
+					
 						return;
 				}
 
@@ -534,8 +620,7 @@ function skipIntro()
 					remove(credGroup);
 					FlxG.camera.flash(OGcolor, 3);
 					sound.onComplete = function() {
-						FlxG.sound.playMusic(Paths.music(ClientPrefs.menuMusic), 0);
-						FlxG.sound.music.fadeIn(4, 0, 0.7);
+						FlxG.sound.playMusic(Paths.music(ClientPrefs.menuMusic));
 						transitioning = false;
 					};
 				}
@@ -546,7 +631,14 @@ function skipIntro()
 				remove(ngSpr);
 				remove(credGroup);
 				FlxG.camera.flash(OGcolor, 4);
-
+               // gfDance.x -= gfDance.width * 1.75;
+              //  logoBl.x -= logoBl.width * 1.75;
+            //    new FlxTimer().start(0.1, function(tmr)
+			//		{
+            //    FlxTween.tween(gfDance, {x: gfDance.x + gfDance.width * 1.75}, 1.75, {ease: FlxEase.cubeInOut});
+//
+             //   FlxTween.tween(logoBl, {x: logoBl.x + logoBl.width * 1.75}, 1.75, {ease: FlxEase.cubeInOut});
+             //       });
 				var easteregg = flixelSave.data.psychDevsEasterEgg;
 				if (easteregg == null) easteregg = '';
 				easteregg = easteregg.toUpperCase();

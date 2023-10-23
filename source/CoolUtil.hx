@@ -20,7 +20,7 @@ import openfl.utils.Assets;
 #end
 import flixel.FlxSprite;
 using StringTools;
-
+import flixel.util.FlxColor;
 class CoolUtil
 {
 	public static var defaultDifficulties:Array<String> = [
@@ -36,6 +36,8 @@ class CoolUtil
 
 	public static final JSON_EXT:Array<String> = ['json', 'jsonc'];
 
+	
+	
 	public static function coolDynamicTextFile(path:String):Array<String>
 	{
 		return coolTextFile(path);
@@ -75,7 +77,9 @@ class CoolUtil
 		trace(snap);
 		return (m / snap);
 	}
-	
+	inline public static function capitalize(text:String)
+		return text.charAt(0).toUpperCase() + text.substr(1).toLowerCase();
+
 	public static function getDifficultyFilePath(num:Null<Int> = null)
 	{
 		if(num == null) num = PlayState.storyDifficulty;
@@ -114,6 +118,19 @@ class CoolUtil
 
 		return daList;
 	}
+
+	inline public static function colorFromString(color:String):FlxColor
+		{
+			var hideChars = ~/[\t\n\r]/;
+			var color:String = hideChars.split(color).join('').trim();
+			if(color.startsWith('0x')) color = color.substring(color.length - 6);
+	
+			var colorNum:Null<FlxColor> = FlxColor.fromString(color);
+			if(colorNum == null) colorNum = FlxColor.fromString('#$color');
+			return colorNum != null ? colorNum : FlxColor.WHITE;
+		}
+
+		
 	public static function listFromString(string:String):Array<String>
 	{
 		var daList:Array<String> = [];
@@ -126,6 +143,20 @@ class CoolUtil
 
 		return daList;
 	}
+
+	public static function floorDecimal(value:Float, decimals:Int):Float
+		{
+			if(decimals < 1)
+				return Math.floor(value);
+	
+			var tempMult:Float = 1;
+			for (i in 0...decimals)
+				tempMult *= 10;
+	
+			var newValue:Float = Math.floor(value * tempMult);
+			return newValue / tempMult;
+		}
+
 	public static function dominantColor(sprite:flixel.FlxSprite):Int{
 		var countByColor:Map<Int, Int> = [];
 		for(col in 0...sprite.frameWidth){
@@ -162,12 +193,24 @@ class CoolUtil
 		Paths.music(sound, library);
 	}
 
+	
 	public static function browserLoad(site:String) {
 		#if linux
 		Sys.command('/usr/bin/xdg-open', [site]);
 		#else
 		FlxG.openURL(site);
 		#end
+	}
+	/** Quick Function to Fix Save Files for Flixel 5
+		if you are making a mod, you are gonna wanna change "ShadowMario" to something else
+		so Base Psych saves won't conflict with yours
+		@BeastlyGabi
+	**/
+	public static function getSavePath(folder:String = 'Raincandy_U'):String {
+		@:privateAccess
+		return #if (flixel < "5.0.0") folder #else FlxG.stage.application.meta.get('company')
+			+ '/'
+			+ FlxSave.validate(FlxG.stage.application.meta.get('file')) #end;
 	}
 }
 

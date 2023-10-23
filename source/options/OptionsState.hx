@@ -37,16 +37,36 @@ class OptionsState extends MusicBeatState
 	function openSelectedSubstate(label:String) {
 		switch(label) {
 			case 'Note Colors':
+				#if mobile
+				removeVirtualPad();
+				#end
 				openSubState(new options.NotesSubState());
 			case 'Change Gameplay stuffs':
+				#if mobile
+				removeVirtualPad();
+				#end
 				openSubState(new GameplayChangersSubstate());
 			case 'Controls':
+				#if mobile
+				removeVirtualPad();
+				#end
 				openSubState(new options.ControlsSubState());
+					
+				
 			case 'Graphics':
+				#if mobile
+				removeVirtualPad();
+				#end
 				openSubState(new options.GraphicsSettingsSubState());
 			case 'Visuals and UI':
+				#if mobile
+				removeVirtualPad();
+				#end
 				openSubState(new options.VisualsUISubState());
 			case 'Gameplay':
+				#if mobile
+				removeVirtualPad();
+				#end
 				openSubState(new options.GameplaySettingsSubState());
 			case 'Adjust Delay and Combo':
 				LoadingState.loadAndSwitchState(new options.NoteOffsetState());
@@ -96,21 +116,27 @@ class OptionsState extends MusicBeatState
 		add(selectorLeft);
 		selectorRight = new Alphabet(0, 0, '<', true, false);
 		add(selectorRight);
-
+		#if android
+		var tipText:FlxText = new FlxText(10, FlxG.height - 24, 0, 'Press C to Go In Mobile Controls Menu', 16);
+		tipText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		tipText.borderSize = 2;
+		tipText.scrollFactor.set();
+		add(tipText);
+		#end
 		changeSelection();
 		ClientPrefs.saveSettings();
-		#if IS_CORRUPTION
-	var tv = new FlxSprite().loadGraphic(FNFAssets.getBitmapData('windose_data/images/optionsFront.png'));
-	tv.antialiasing = ClientPrefs.globalAntialiasing;
-	tv.scrollFactor.set();
-	add(tv);
-	#end
+		#if mobile
+		addVirtualPad(UP_DOWN, A_B_C);
+		#end
 		super.create();
 	}
 
 	override function closeSubState() {
 		super.closeSubState();
 		ClientPrefs.saveSettings();
+		#if mobile
+		addVirtualPad(UP_DOWN, A_B_C);
+                #end
 	}
 
 	override function update(elapsed:Float) {
@@ -134,6 +160,11 @@ class OptionsState extends MusicBeatState
 		if (controls.ACCEPT) {
 			openSelectedSubstate(options[curSelected]);
 		}
+		#if mobile
+		if (_virtualpad.buttonC.justPressed) {
+			MusicBeatState.switchState(new android.AndroidControlsMenu());
+		}
+		#end
 	}
 	
 	function changeSelection(change:Int = 0) {
