@@ -24,7 +24,10 @@ using CoolUtil.FlxTools;
 
 typedef Dialogue =
 {
+	var addX:Int;
 	var addY:Int;
+	var scaleX:Float;
+	var scaleY:Float;
 	var canFlip:Bool;
 	var isPixel:Bool;
 }
@@ -93,7 +96,10 @@ class DialogueBoxMPlus extends FlxSpriteGroup
 		if (dialogueInput.split('\n')[0] == ':dad: The game tried to get a dialog file but couldn\'t find it. Please make sure there is a dialog file named "dialog.txt".')
 			return;
 		_dialogue = {
+			addX: 0,
 			addY: 0,
+			scaleX: 0,
+			scaleY: 0,
 			canFlip: true,
 			isPixel : false
 		};
@@ -176,8 +182,10 @@ class DialogueBoxMPlus extends FlxSpriteGroup
 			_dialogue = CoolUtil.parseJson(data);
 		}
 
+		box.x += _dialogue.addX;
 		box.y += _dialogue.addY;
-
+		box.scale.x *= _dialogue.scaleX;
+		box.scale.y *= _dialogue.scaleY;
 		portrait.screenCenter(Y);
 		#if MODS_ALLOWED
 		handSelect = new FlxSprite(1240, 680).loadGraphic(FNFAssets.getBitmapData(Paths.isModPath('images/custom_dialogs/dialogHands/$handSprite.png')));
@@ -455,7 +463,10 @@ for (touch in FlxG.touches.list)
 			#end
 			_dialogue = Json.parse(data);
 
+			box.x += _dialogue.addX;
 			box.y += _dialogue.addY;
+			box.scale.x *= _dialogue.scaleX;
+			box.scale.y *= _dialogue.scaleY;
 		}
 
 		if (_dialogue.canFlip)
