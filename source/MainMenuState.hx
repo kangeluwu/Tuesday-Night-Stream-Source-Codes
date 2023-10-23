@@ -259,7 +259,6 @@ function makeHaxeState(usehaxe:String, path:String, filename:String) {
 	interp.variables.set("currentMainMenuState", this);
 	interp.variables.set("add", add);
 	interp.variables.set("remove", remove);
-	interp.variables.set("fromRGB", fromRGB);
 	interp.variables.set("X", FlxAxes.X);
 	interp.variables.set("Y", FlxAxes.Y);
 	interp.variables.set("Application", Application);
