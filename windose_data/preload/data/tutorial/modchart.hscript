@@ -1,0 +1,43 @@
+
+function start(song) {
+
+}
+
+
+function beatHit(beat)
+{
+
+
+}
+
+function update(elapsed)
+{
+  
+}
+
+function stepHit(step)
+{
+
+}
+
+function opponentTurn()
+{
+}
+
+function opponentNoteHit(id, direction, noteType, isSustainNote, note)
+{
+}
+
+function playerTurn()
+{
+}
+
+function noteMiss(id, direction, noteType, isSustainNote, note)
+{
+
+}
+
+function goodNoteHit(id, direction, noteType, isSustainNote, note)
+{
+
+}

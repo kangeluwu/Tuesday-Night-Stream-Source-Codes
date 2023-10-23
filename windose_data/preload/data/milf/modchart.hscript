@@ -1,0 +1,363 @@
+//Notetype Change(Beta)
+function start(song) {
+}
+
+
+function beatHit(beat)
+{
+
+
+}
+
+function update(elapsed)
+{
+  currentPlayState.genocideMode = true;
+  currentPlayState.notes.forEach(function(daNote){
+    if (daNote.isSustainNote && daNote.isPixelNote){
+
+
+daNote.scale.y*= Conductor.stepCrochet / 100 * 1.05;
+daNote.scale.y *= 1.19;
+
+daNote.scale.y *= (6 / daNote.height);
+daNote.resizeByRatio(PlayState.instance.songSpeed);
+
+
+daNote.updateHitbox();
+daNote.scale.y *=  PlayState.daPixelZoom;
+daNote.offsetX = 30;
+daNote.updateHitbox();
+daNote.y += 8 + (6 - daNote.originalHeightForCalcs) * PlayState.daPixelZoom;
+    }
+
+  });
+}
+
+function stepHit(step)
+{
+
+
+}
+
+function opponentTurn()
+{
+}
+
+function opponentNoteHit(id, direction, noteType, isSustainNote, note)
+{
+}
+
+function playerTurn()
+{
+}
+
+function noteMiss(id, direction, noteType, isSustainNote, note)
+{
+
+}
+
+function goodNoteHit(id, direction, noteType, isSustainNote, note)
+{
+
+}
+var noteY = 50;
+var tween = [];
+function changeFullNotesSkin(texture, prefix, funnidirection, isPixel, isDown)
+{
+
+
+ 
+  if(texture == null || texture == '') texture = 'NOTE_assets';
+  if(prefix == null || prefix == '') prefix = '';
+if (funnidirection < 8){
+  currentPlayState.strumLineNotes.members[funnidirection].downScroll = isDown;
+currentPlayState.strumLineNotes.members[funnidirection].isPixelNote = isPixel;
+  currentPlayState.strumLineNotes.members[funnidirection].texture = texture;
+  if (isDown){
+    if(tween[funnidirection] != null) tween[funnidirection].cancel();
+    tween[funnidirection] = FlxTween.tween(currentPlayState.strumLineNotes.members[funnidirection], {y: FlxG.height - 150}, 0.1, {onComplete: function(twn)
+{
+tween[funnidirection] = null;
+}});
+  }
+  else
+    {
+      if(tween[funnidirection] != null) tween[funnidirection].cancel();
+      tween[funnidirection] = FlxTween.tween(currentPlayState.strumLineNotes.members[funnidirection], {y: noteY}, 0.1, {onComplete: function(twn)
+        {
+        tween[funnidirection] = null;
+        }});
+    }
+
+
+  currentPlayState.notes.forEach(function(daNote){
+    
+      
+if (funnidirection < 4){
+        if (!daNote.mustPress && daNote.noteData == funnidirection)
+        {
+          if (daNote.isSustainNote){
+          if (isDown){
+            daNote.flipY = true;
+          }
+          else
+            {
+            daNote.flipY = false;
+            }
+        }
+          daNote.isPixelNote = isPixel;
+          if (daNote.noteType == '')
+          daNote.reloadNote(prefix, texture);
+
+                
+        }
+    }
+    else
+      {
+        if (daNote.mustPress && daNote.noteData == funnidirection - 4)
+          {
+            if (daNote.isSustainNote){
+              if (isDown)
+                daNote.flipY = true;
+              else
+                daNote.flipY = false;
+            }
+            
+            daNote.isPixelNote = isPixel;
+            if (daNote.noteType == '')
+              daNote.reloadNote(prefix, texture);
+
+          }   
+      }
+      if (daNote.noteType != '')
+        setnoteType();  
+  });
+}
+else
+{
+  for (i in 0...currentPlayState.strumLineNotes.length) {
+currentPlayState.strumLineNotes.members[i].isPixelNote = isPixel;
+  currentPlayState.strumLineNotes.members[i].texture = texture;
+  currentPlayState.strumLineNotes.members[i].downScroll = isDown;
+  if (isDown){
+    if(tween[i] != null) tween[i].cancel();      
+    tween[i] = FlxTween.tween(currentPlayState.strumLineNotes.members[i], {y: FlxG.height - 150}, 0.1, {onComplete: function(twn)
+{
+tween[i] = null;
+}});
+  }
+  else
+    {
+      if(tween[i] != null) tween[i].cancel();      
+      tween[i] = FlxTween.tween(currentPlayState.strumLineNotes.members[i], {y: noteY}, 0.1, {onComplete: function(twn)
+        {
+          tween[i] = null;
+        }});
+    }
+  }
+  currentPlayState.notes.forEach(function(daNote)
+    {
+      if (daNote.isSustainNote){
+        if (isDown)
+          daNote.flipY = true;
+        else
+          daNote.flipY = false;
+      }
+      
+      daNote.isPixelNote = isPixel;
+      if (daNote.noteType == '')
+      daNote.reloadNote(prefix, texture);
+
+      if (daNote.noteType != '')
+        setnoteType();  
+    });
+}
+}
+
+function changeStrumNotesSkin(texture, funnidirection, isPixel, isDown)
+  {
+    if(texture == null || texture == '') texture = 'NOTE_assets';
+  
+  if (funnidirection < 8){
+    currentPlayState.strumLineNotes.members[funnidirection].downScroll = isDown;
+  currentPlayState.strumLineNotes.members[funnidirection].isPixelNote = isPixel;
+    currentPlayState.strumLineNotes.members[funnidirection].texture = texture;
+    if (isDown){
+      if(tween[i] != null) tween[i].cancel();      
+      tween[i] = FlxTween.tween(currentPlayState.strumLineNotes.members[i], {y: FlxG.height - 150}, 0.1, {onComplete: function(twn)
+  {
+  tween[i] = null;
+  }});
+    }
+    else
+      {
+        if(tween[i] != null) tween[i].cancel();      
+        tween[i] = FlxTween.tween(currentPlayState.strumLineNotes.members[i], {y: noteY}, 0.1, {onComplete: function(twn)
+          {
+            tween[i] = null;
+          }});
+      }
+  }
+  else
+  {
+    for (i in 0...currentPlayState.strumLineNotes.length) {
+      currentPlayState.strumLineNotes.members[i].downScroll = isDown;
+  currentPlayState.strumLineNotes.members[i].isPixelNote = isPixel;
+    currentPlayState.strumLineNotes.members[i].texture = texture;
+    if (isDown){
+      if(tween[i] != null) tween[i].cancel();      
+      tween[i] = FlxTween.tween(currentPlayState.strumLineNotes.members[i], {y: FlxG.height - 150}, 0.1, {onComplete: function(twn)
+  {
+  tween[i] = null;
+  }});
+    }
+    else
+      {
+        if(tween[i] != null) tween[i].cancel();      
+        tween[i] = FlxTween.tween(currentPlayState.strumLineNotes.members[i], {y: noteY}, 0.1, {onComplete: function(twn)
+          {
+            tween[i] = null;
+          }});
+      }
+    }
+  
+  }
+  }
+
+function changeNotesSkin(texture, prefix, funnidirection, isPixel)
+  {
+    if(texture == null || texture == '') texture = 'NOTE_assets';
+    if(prefix == null || prefix == '') prefix = '';
+  if (funnidirection < 8){
+  
+    currentPlayState.notes.forEach(function(daNote){
+  if (funnidirection < 4){
+          if (!daNote.mustPress && daNote.noteData == funnidirection)
+          {
+
+
+            daNote.isPixelNote = isPixel;
+            if (daNote.noteType == '')
+            daNote.reloadNote(prefix, texture);
+
+          }
+      }
+      else
+        {
+          if (daNote.mustPress && daNote.noteData == funnidirection - 4)
+            {
+
+              daNote.isPixelNote = isPixel;
+              if (daNote.noteType == '')
+              daNote.reloadNote(prefix, texture);
+
+            }   
+        }
+        if (daNote.noteType != '')
+          setnoteType();  
+    });
+  }
+  else
+  {
+
+    currentPlayState.notes.forEach(function(daNote)
+      {
+
+        daNote.isPixelNote = isPixel;
+        if (daNote.noteType == '')
+        daNote.reloadNote(prefix, texture);
+
+        if (daNote.noteType != '')
+          setnoteType();  
+      });
+  
+  }
+  
+  }
+
+  function setnoteType()
+    {
+      currentPlayState.notes.forEach(function(daNote)
+        {
+          if(daNote.noteData > -1 && daNote.noteType != '') {
+            switch(daNote.noteType) {
+              case 'Hurt Note':
+                daNote.reloadNote('HURT');
+                case 'Death Note':
+                  daNote.reloadNote('NUKE');
+              case 'Alt Animation':
+                daNote.reloadNote('');
+              case 'No Animation':
+                daNote.reloadNote('');
+              case 'GF Sing':
+                daNote.reloadNote('');
+              case 'Both Sing':
+                daNote.reloadNote('');
+              case 'Drain Note':
+                daNote.reloadNote('');
+      
+              case 'Warning Note':
+               
+                daNote.reloadNote('WARNING');
+              case 'Static Note':
+                daNote.reloadNote('STATIC');
+            }
+
+          }
+  });
+    }
+
+function changeStrumsWithNotesSkin(texture, prefix, strums, isPixel, isDown)
+  {
+    if(texture == null || texture == '') texture = 'NOTE_assets';
+    if(prefix == null || prefix == '') prefix = '';
+if (strums == 0){
+ changeFullNotesSkin(texture, prefix, 0, isPixel, isDown);
+ changeFullNotesSkin(texture, prefix, 1, isPixel, isDown);
+ changeFullNotesSkin(texture, prefix, 2, isPixel, isDown);
+ changeFullNotesSkin(texture, prefix, 3, isPixel, isDown);
+}else if (strums == 1){
+ changeFullNotesSkin(texture, prefix, 4, isPixel, isDown);
+ changeFullNotesSkin(texture, prefix, 5, isPixel, isDown);
+ changeFullNotesSkin(texture, prefix, 6, isPixel, isDown);
+ changeFullNotesSkin(texture, prefix, 7, isPixel, isDown);
+}
+  
+  }
+
+function changeAllNotesSkin(texture, prefix, strums, isPixel)
+  {
+//NO MORE.....
+    if(texture == null || texture == '') texture = 'NOTE_assets';
+    if(prefix == null || prefix == '') prefix = '';
+if (strums == 0){
+changeNotesSkin(texture, prefix, 0, isPixel);
+changeNotesSkin(texture, prefix, 1, isPixel);
+changeNotesSkin(texture, prefix, 2, isPixel);
+changeNotesSkin(texture, prefix, 3, isPixel);
+}else if (strums == 1){
+changeNotesSkin(texture, prefix, 4, isPixel);
+changeNotesSkin(texture, prefix, 5, isPixel);
+changeNotesSkin(texture, prefix, 6, isPixel);
+changeNotesSkin(texture, prefix, 7, isPixel);
+}
+  
+  }
+
+function changeAllStrumsNotesSkin(texture, strums, isPixel, isDown)
+  {
+    if(texture == null || texture == '') texture = 'NOTE_assets';
+    if(prefix == null || prefix == '') prefix = '';
+if (strums == 0){
+changeStrumNotesSkin(texture, 0, isPixel, isDown);
+changeStrumNotesSkin(texture, 1, isPixel, isDown);
+changeStrumNotesSkin(texture, 2, isPixel, isDown);
+changeStrumNotesSkin(texture, 3, isPixel, isDown);
+}else if (strums == 1){
+changeStrumNotesSkin(texture, 4, isPixel, isDown);
+changeStrumNotesSkin(texture, 5, isPixel, isDown);
+changeStrumNotesSkin(texture, 6, isPixel, isDown);
+changeStrumNotesSkin(texture, 7, isPixel, isDown);
+}
+  
+  }
