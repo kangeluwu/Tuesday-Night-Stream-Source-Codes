@@ -816,10 +816,14 @@ function camerabgAlphaShits(cam:FlxCamera)
 				add(boyfriendGroup); 
 			
 		});
-		interp.variables.set("add", add);
+		interp.variables.set("add", function(sprite) {
+			add(sprite);
+		});
 		interp.variables.set("fromRGB", fromRGB);
 		interp.variables.set("changeNewUI", changeNewUI);
-		interp.variables.set("remove", this.remove);
+		interp.variables.set("remove", function(sprite) {
+			remove(sprite);
+		});
 		interp.variables.set("insert", insert);
 		interp.variables.set("replace", replace);
 		interp.variables.set("setDefaultZoom", function(zoom:Float){
